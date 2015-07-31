@@ -19,19 +19,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
-		url, err := user.LoginURL(c, r.URL.String())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("location", url)
-		w.WriteHeader(http.StatusFound)
+		redirectLogin(c, w, r)
 		return
 	}
 	fmt.Fprintf(w, "Hello %v.", u)
 }
 
 func newGame(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		redirectLogin(c, w, r)
+		return
+	}
 	fmt.Fprint(w, newGameForm)
 }
 
@@ -47,6 +47,12 @@ const newGameForm = `
 `
 
 func postGame(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		redirectLogin(c, w, r)
+		return
+	}
 	err := postGameTemplate.Execute(w, r.FormValue("handle"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -62,3 +68,14 @@ const postGameTemplateHTML = `
   </body>
 </html>
 `
+
+func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
+	url, err := user.LoginURL(c, r.URL.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("location", url)
+	w.WriteHeader(http.StatusFound)
+	return
+}
