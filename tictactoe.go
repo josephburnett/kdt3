@@ -17,6 +17,7 @@ func init() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/new", newGame)
 	http.HandleFunc("/game", postGame)
+	http.HandleFunc("/game/", getGame)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +58,7 @@ func postGame(w http.ResponseWriter, r *http.Request) {
 		redirectLogin(c, w, r)
 		return
 	}
-	err, game := createGame(c, r)
+	game, err := createGame(c, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -67,7 +68,7 @@ func postGame(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func createGame(c appengine.Context, r *http.Request) (error, *Game) {
+func createGame(c appengine.Context, r *http.Request) (*Game, error) {
 	game := &Game {
 		Creator: r.FormValue("handle"),
 		Id: newId(),
@@ -78,9 +79,9 @@ func createGame(c appengine.Context, r *http.Request) (error, *Game) {
 	}
 	err := memcache.JSON.Add(c, item)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	return err, game
+	return game, err
 }
 
 var postGameTemplate = template.Must(template.New("postgame").Parse(postGameTemplateHTML))
@@ -88,9 +89,39 @@ var postGameTemplate = template.Must(template.New("postgame").Parse(postGameTemp
 const postGameTemplateHTML = `
 <html>
   <body>
-    <p>This game was started by {{.Creator}} and the id is {{.Id}}</p>
+    <p>A game was started by {{.Creator}} and the id is {{.Id}}</p>
+    <p>Click <a href="/game/{{.Id}}">here</a> to play!</p>
   </body>
 </html>
+`
+
+func getGame (w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		redirectLogin(c, w, r)
+		return
+	}
+	id := r.URL.Path[len("/game/"):]
+	game := &Game{}
+	_, err := memcache.JSON.Get(c, id, game)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	err = getGameTemplate.Execute(w, game)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+var getGameTemplate = template.Must(template.New("getgame").Parse(getGameTemplateHTML))
+
+const getGameTemplateHTML = `
+<html>
+  <body>
+    <pre>{{.}}</pre>
+  </body>
+<html>
 `
 
 func newId() string {
