@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"appengine"
+	"appengine/memcache"
 	"appengine/user"
 )
 
@@ -56,14 +57,30 @@ func postGame(w http.ResponseWriter, r *http.Request) {
 		redirectLogin(c, w, r)
 		return
 	}
+	err, game := createGame(c, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	err = postGameTemplate.Execute(w, game)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func createGame(c appengine.Context, r *http.Request) (error, *Game) {
 	game := &Game {
 		Creator: r.FormValue("handle"),
 		Id: newId(),
 	}
-	err := postGameTemplate.Execute(w, game)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	item := &memcache.Item {
+		Key: game.Id,
+		Object: game,
 	}
+	err := memcache.JSON.Add(c, item)
+	if err != nil {
+		return err, nil
+	}
+	return err, game
 }
 
 var postGameTemplate = template.Must(template.New("postgame").Parse(postGameTemplateHTML))
