@@ -3,6 +3,9 @@ package tictactoe
 import (
 	"fmt"
 	"net/http"
+
+	"appengine"
+	"appengine/user"
 )
 
 func init() {
@@ -10,6 +13,17 @@ func init() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello kdt3!")
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		url, err := user.LoginURL(c, r.URL.String())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("location", url)
+		w.WriteHeader(http.StatusFound)
+		return
+	}
+	fmt.Fprintf(w, "Hello %v.", u)
 }
-
