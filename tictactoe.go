@@ -2,8 +2,11 @@ package tictactoe
 
 import (
 	"fmt"
+	"crypto/rand"
+	"encoding/base32"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"appengine"
 	"appengine/user"
@@ -53,7 +56,11 @@ func postGame(w http.ResponseWriter, r *http.Request) {
 		redirectLogin(c, w, r)
 		return
 	}
-	err := postGameTemplate.Execute(w, r.FormValue("handle"))
+	game := &Game {
+		Creator: r.FormValue("handle"),
+		Id: newId(),
+	}
+	err := postGameTemplate.Execute(w, game)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -64,10 +71,17 @@ var postGameTemplate = template.Must(template.New("postgame").Parse(postGameTemp
 const postGameTemplateHTML = `
 <html>
   <body>
-    <p>This game was started by {{.}}</p>
+    <p>This game was started by {{.Creator}} and the id is {{.Id}}</p>
   </body>
 </html>
 `
+
+func newId() string {
+	bytes := make([]byte, 16)
+	rand.Read(bytes)
+	str := base32.StdEncoding.EncodeToString(bytes)
+	return strings.TrimSuffix(str, "======")
+}
 
 func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
 	url, err := user.LoginURL(c, r.URL.String())
@@ -78,4 +92,9 @@ func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("location", url)
 	w.WriteHeader(http.StatusFound)
 	return
+}
+
+type Game struct {
+	Creator string
+	Id string
 }
