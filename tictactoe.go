@@ -2,6 +2,7 @@ package tictactoe
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"appengine"
@@ -10,6 +11,8 @@ import (
 
 func init() {
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/new", newGame)
+	http.HandleFunc("/game", postGame)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -27,3 +30,35 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprintf(w, "Hello %v.", u)
 }
+
+func newGame(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, newGameForm)
+}
+
+const newGameForm = `
+<html>
+  <body>
+    <form action="/game" method="post">
+      <div>Handle: <input type="text" name="handle"></div>
+      <div><input type="submit" value="Create"></div>
+    </form>
+  </body>
+</html>
+`
+
+func postGame(w http.ResponseWriter, r *http.Request) {
+	err := postGameTemplate.Execute(w, r.FormValue("handle"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+var postGameTemplate = template.Must(template.New("postgame").Parse(postGameTemplateHTML))
+
+const postGameTemplateHTML = `
+<html>
+  <body>
+    <p>This game was started by {{.}}</p>
+  </body>
+</html>
+`
