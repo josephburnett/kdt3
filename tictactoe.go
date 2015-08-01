@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 
 	"appengine"
 	"appengine/memcache"
@@ -76,6 +77,7 @@ func createGame(c appengine.Context, r *http.Request) (*Game, error) {
 	item := &memcache.Item {
 		Key: game.Id,
 		Object: game,
+		Expiration: 24 * time.Hour,
 	}
 	err := memcache.JSON.Add(c, item)
 	if err != nil {
