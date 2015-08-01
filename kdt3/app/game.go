@@ -7,14 +7,17 @@ import (
 
         "appengine"
         "appengine/memcache"
+
+        "kdt3/model"
 )
 
-func createGame(c appengine.Context, r *http.Request) (*Game, error) {
+func createGame(c appengine.Context, r *http.Request) (*model.Game, error) {
         // parameters
         playerCount, err := strconv.Atoi(r.FormValue("playerCount"))
         if err != nil {
                 return nil, err
         }
+        gameId := newId()
         playerIds := make([]string, playerCount)
         handles := make([]string, playerCount)
         for i, _ := range playerIds {
@@ -24,21 +27,10 @@ func createGame(c appengine.Context, r *http.Request) (*Game, error) {
         handles[0] = r.FormValue("handle")
         // objects
         items := make([]*memcache.Item, playerCount+1)
-        game := &Game {
-                GameId: newId(),
-                PlayerIds: playerIds,
-                Owner: 0,
-                Turn: 0,
-        }
-        items[playerCount] = &memcache.Item {
-                Key: game.GameId,
-                Object: game,
-                Expiration: 25 * time.Hour,
-        }
         for i, _ := range playerIds {
-                player := &Player {
-                        PlayerId: newId(),
-                        GameId: game.GameId,
+                player := &model.Player {
+                        PlayerId: playerIds[i],
+                        GameId: gameId,
                         Handle: handles[i],
                 }
                 items[i] = &memcache.Item {
@@ -46,6 +38,17 @@ func createGame(c appengine.Context, r *http.Request) (*Game, error) {
                         Object: player,
                         Expiration: 24 * time.Hour,
                 }
+        }
+        game := &model.Game {
+                GameId: gameId,
+                PlayerIds: playerIds,
+                Owner: 0,
+                Turn: 0,
+        }
+        items[playerCount] = &memcache.Item {
+                Key: gameId,
+                Object: game,
+                Expiration: 25 * time.Hour,
         }
         // persist
         err = memcache.JSON.AddMulti(c, items)

@@ -1,4 +1,4 @@
-package kdt3
+package model
 
 type Player struct {
         PlayerId string
