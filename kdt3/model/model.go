@@ -11,4 +11,22 @@ type Game struct {
         PlayerIds []string
         Owner int
         Turn int
+        Win [][]int
+        Board *Board
+}
+
+type Board struct {
+        K int
+        D *Cell
+        Size int
+}
+
+type Cell struct {
+        D []*Cell
+        Player int
+        IsClaimed bool
+}
+
+type Rules struct {
+        InARow int
 }

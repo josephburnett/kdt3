@@ -2,6 +2,8 @@ package engine
 
 import (
         "testing"
+
+        "kdt3/model"
 )
 
 func TestEachDirection1(t *testing.T) {
@@ -74,4 +76,105 @@ func (actual directions) equals(expect directions) bool {
                 }
         }
         return true
+}
+
+func TestWinningK1(t *testing.T) {
+        K := 1
+        player := 1
+        root := &model.Cell{
+                D: []*model.Cell{
+                        &model.Cell{IsClaimed: true, Player: player},
+                        &model.Cell{IsClaimed: true, Player: player},
+                },
+        }
+        rules := &model.Rules{InARow: 2}
+        if !isWinningVector(K, root, player, rules, []int{0}, []int{Incline}) {
+                t.Errorf("Expected K1 win.")
+        }
+        if !isWinningVector(K, root, player, rules, []int{1}, []int{Decline}) {
+                t.Errorf("Expected K1 win.")
+        }
+}
+
+func TestNotWinningK1(t *testing.T) {
+        K := 1
+        player := 1
+        root := &model.Cell{
+                D: []*model.Cell{
+                        &model.Cell{IsClaimed: true, Player: player},
+                        &model.Cell{IsClaimed: false},
+                },
+        }
+        rules := &model.Rules{InARow: 2}
+        if isWinningVector(K, root, player, rules, []int{0}, []int{Incline}) {
+                t.Errorf("Expected no K1 win.")
+        }
+        if isWinningVector(K, root, player, rules, []int{1}, []int{Decline}) {
+                t.Errorf("Expected no K1 win.")
+        }
+}
+
+func TestWinningK2Diagonal(t *testing.T) {
+        K := 2
+        player := 1
+        root := &model.Cell{
+                D: []*model.Cell{
+                        &model.Cell{
+                                D: []*model.Cell{
+                                        &model.Cell{IsClaimed: true, Player: player},
+                                        &model.Cell{IsClaimed: false},
+                                },
+                        },
+                        &model.Cell{
+                                D: []*model.Cell{
+                                        &model.Cell{IsClaimed: false},
+                                        &model.Cell{IsClaimed: true, Player: player},
+                                },
+                        },
+                },
+        }
+        rules := &model.Rules{InARow: 2}
+        if !isWinningVector(K, root, player, rules, []int{0,0}, []int{Incline, Incline}) {
+                t.Errorf("Expected K2 diagonal win")
+        }
+        if !isWinningVector(K, root, player, rules, []int{1,1}, []int{Decline, Decline}) {
+                t.Errorf("Expected K2 diagonal win")
+        }
+        if isWinningVector(K, root, player, rules, []int{1,0}, []int{Decline, Incline}) {
+                t.Errorf("Unexpected K2 diagonal win")
+        }
+        if isWinningVector(K, root, player, rules, []int{0,1}, []int{Incline, Decline}) {
+                t.Errorf("Unexpected K2 diagonal win")
+        }
+        if isWinningVector(K, root, player, rules, []int{0,0}, []int{Neutral, Decline}) {
+                t.Errorf("Unexpected K2 out-of-bounds win")
+        }
+        if isWinningVector(K, root, player, rules, []int{1,1}, []int{Incline, Neutral}) {
+                t.Errorf("Unexpected K2 out-of-bounds win")
+        }
+}
+
+func TestNotWinningK2(t *testing.T) {
+        K := 2
+        player := 1
+        root := &model.Cell{
+                D: []*model.Cell{
+                        &model.Cell{
+                                D: []*model.Cell{
+                                        &model.Cell{IsClaimed: true, Player: player},
+                                        &model.Cell{IsClaimed: true, Player: player},
+                                },
+                        },
+                        &model.Cell{
+                                D: []*model.Cell{
+                                        &model.Cell{IsClaimed: true, Player: player},
+                                        &model.Cell{IsClaimed: true, Player: player},
+                                },
+                        },
+                },
+        }
+        rules := &model.Rules{InARow: 2}
+        if isWinningVector(K, root, player, rules, []int{0,0}, []int{Neutral, Neutral}) {
+                t.Errorf("Expected no K2 neutral win")
+        }
 }
