@@ -10,6 +10,21 @@ const (
         Incline = 1
 )
 
+type WinnableBoard struct {
+        *model.Board
+}
+
+func (b WinnableBoard) GetWins(player int, rules *model.Rules) (wins []model.Segment) {
+        eachPoint(b.K, b.D, func(p model.Point) {
+                eachDirection(b.K, func(d model.Direction) {
+                        if isWinningVector(b.K, b.D, player, rules, p, d) {
+                                wins = append(wins, model.NewSegment(p, d, rules.InARow))
+                        }
+                })
+        })
+        return
+}
+
 func eachPoint(K int, root *model.Cell, fn func(model.Point)) {
         point := make(model.Point, K)
         var recur func(*model.Cell, int)

@@ -7,6 +7,38 @@ import (
         "kdt3/model"
 )
 
+func TestWinnableBoardK1(t *testing.T) {
+        board := &model.Board{
+                K: 2,
+                Size: 2,
+                D: &model.Cell{
+                        D: []*model.Cell{
+                                &model.Cell{
+                                        D: []*model.Cell{
+                                                &model.Cell{IsClaimed: true, Player: 1},
+                                                &model.Cell{IsClaimed: true, Player: 2},
+                                        },
+                                },
+                                &model.Cell{
+                                        D: []*model.Cell{
+                                                &model.Cell{},
+                                                &model.Cell{IsClaimed: true, Player: 1},
+                                        },
+                                },
+                        },
+                },
+        }
+        rules := &model.Rules{InARow: 2}
+        expect := []model.Segment{
+                model.Segment{model.Point{0, 0}, model.Point{1, 1},},
+                model.Segment{model.Point{1, 1}, model.Point{0, 0},},
+        }
+        actual := WinnableBoard{board}.GetWins(1, rules)
+        if !reflect.DeepEqual(expect, actual) {
+                t.Errorf("Expected %v but got %v\n", expect, actual)
+        }
+}
+
 func TestEachDirection1(t *testing.T) {
         expect := []model.Direction{
                 model.Direction{Decline},

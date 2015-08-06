@@ -11,7 +11,7 @@ type Game struct {
         PlayerIds []string
         Owner int
         Turn int
-        Win [][]int
+        Wins []Point
         Board *Board
 }
 
@@ -31,5 +31,24 @@ type Rules struct {
         InARow int
 }
 
-type Point []int
 type Direction []int
+type Point []int
+type Segment []Point
+
+func (p Point) Clone() Point {
+        point := make(Point, len(p))
+        copy(point, p)
+        return point
+}
+
+func NewSegment(p Point, d Direction, length int) Segment {
+        segment := make(Segment, length)
+        segment[0] = p.Clone()
+        for i := 1; i < length; i++ {
+                segment[i] = segment[i-1].Clone()
+                for j, v := range d {
+                        segment[i][j] += v
+                }
+        }
+        return segment
+}
