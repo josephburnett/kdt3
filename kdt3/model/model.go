@@ -30,3 +30,6 @@ type Cell struct {
 type Rules struct {
         InARow int
 }
+
+type Point []int
+type Direction []int

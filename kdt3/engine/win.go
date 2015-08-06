@@ -10,24 +10,38 @@ const (
         Incline = 1
 )
 
-// for each cell, look each direction and count to in-a-row.
+func eachPoint(K int, root *model.Cell, fn func(model.Point)) {
+        point := make(model.Point, K)
+        var recur func(*model.Cell, int)
+        recur = func(c *model.Cell, depth int) {
+                if depth == 0 {
+                        fn(point)
+                } else {
+                        for i, d := range c.D {
+                                point[depth-1] = i
+                                recur(d, depth-1)
+                        }
+                }
+        }
+        recur(root, K)
+}
 
-func eachDirection(K int, fn func ([]int)) {
-        direction := make([]int, K)
-        var recur func(fn func([]int), depth, dir int)
-        recur = func(fn func([]int), depth, dir int) {
+func eachDirection(K int, fn func (model.Direction)) {
+        direction := make(model.Direction, K)
+        var recur func(int, int)
+        recur = func(depth, dir int) {
                 direction[depth] = dir
                 if depth == 0 {
                         fn(direction)
                 } else {
-                        recur(fn, depth-1, Decline)
-                        recur(fn, depth-1, Neutral)
-                        recur(fn, depth-1, Incline)
+                        recur(depth-1, Decline)
+                        recur(depth-1, Neutral)
+                        recur(depth-1, Incline)
                 }
         }
-        recur(fn, K-1, Decline)
-        recur(fn, K-1, Neutral)
-        recur(fn, K-1, Incline)
+        recur(K-1, Decline)
+        recur(K-1, Neutral)
+        recur(K-1, Incline)
 }
 
 func isWinningVector(K int, root *model.Cell, player int, rules *model.Rules, point, direction []int) bool {
