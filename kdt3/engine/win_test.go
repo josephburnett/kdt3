@@ -4,34 +4,34 @@ import (
         "reflect"
         "testing"
 
-        "kdt3/model"
+        m "kdt3/model"
 )
 
 func TestWinnableBoardK1(t *testing.T) {
-        board := &model.Board{
+        board := &m.Board{
                 K: 2,
                 Size: 2,
-                D: &model.Cell{
-                        D: []*model.Cell{
-                                &model.Cell{
-                                        D: []*model.Cell{
-                                                &model.Cell{IsClaimed: true, Player: 1},
-                                                &model.Cell{IsClaimed: true, Player: 2},
+                D: &m.Cell{
+                        D: []*m.Cell{
+                                &m.Cell{
+                                        D: []*m.Cell{
+                                                &m.Cell{IsClaimed: true, Player: 1},
+                                                &m.Cell{IsClaimed: true, Player: 2},
                                         },
                                 },
-                                &model.Cell{
-                                        D: []*model.Cell{
-                                                &model.Cell{},
-                                                &model.Cell{IsClaimed: true, Player: 1},
+                                &m.Cell{
+                                        D: []*m.Cell{
+                                                &m.Cell{},
+                                                &m.Cell{IsClaimed: true, Player: 1},
                                         },
                                 },
                         },
                 },
         }
-        rules := &model.Rules{InARow: 2}
-        expect := []model.Segment{
-                model.Segment{model.Point{0, 0}, model.Point{1, 1},},
-                model.Segment{model.Point{1, 1}, model.Point{0, 0},},
+        rules := &m.Rules{InARow: 2}
+        expect := []m.Segment{
+                m.Segment{m.Point{0, 0}, m.Point{1, 1},},
+                m.Segment{m.Point{1, 1}, m.Point{0, 0},},
         }
         actual := WinnableBoard{board}.GetWins(1, rules)
         if !reflect.DeepEqual(expect, actual) {
@@ -40,10 +40,10 @@ func TestWinnableBoardK1(t *testing.T) {
 }
 
 func TestEachDirection1(t *testing.T) {
-        expect := []model.Direction{
-                model.Direction{Decline},
-                model.Direction{Neutral},
-                model.Direction{Incline},
+        expect := []m.Direction{
+                m.Direction{Decline},
+                m.Direction{Neutral},
+                m.Direction{Incline},
         }
         actual := collect(1)
         if !reflect.DeepEqual(actual, expect) {
@@ -52,16 +52,16 @@ func TestEachDirection1(t *testing.T) {
 }
 
 func TestEachDirection2(t *testing.T) {
-        expect := []model.Direction{
-                model.Direction{Decline, Decline},
-                model.Direction{Neutral, Decline},
-                model.Direction{Incline, Decline},
-                model.Direction{Decline, Neutral},
-                model.Direction{Neutral, Neutral},
-                model.Direction{Incline, Neutral},
-                model.Direction{Decline, Incline},
-                model.Direction{Neutral, Incline},
-                model.Direction{Incline, Incline},
+        expect := []m.Direction{
+                m.Direction{Decline, Decline},
+                m.Direction{Neutral, Decline},
+                m.Direction{Incline, Decline},
+                m.Direction{Decline, Neutral},
+                m.Direction{Neutral, Neutral},
+                m.Direction{Incline, Neutral},
+                m.Direction{Decline, Incline},
+                m.Direction{Neutral, Incline},
+                m.Direction{Incline, Incline},
         }
         actual := collect(2)
         if !reflect.DeepEqual(actual, expect) {
@@ -81,10 +81,10 @@ func TestEachDirectionK(t *testing.T) {
         }
 }
 
-func collect(K int) []model.Direction {
-        actual := make([]model.Direction, 0, 3)
-        eachDirection(K, func(direction model.Direction) {
-                d := make(model.Direction, len(direction))
+func collect(K int) []m.Direction {
+        actual := make([]m.Direction, 0, 3)
+        eachDirection(K, func(direction m.Direction) {
+                d := make(m.Direction, len(direction))
                 copy(d, direction)
                 actual = append(actual, d)
         })
@@ -94,17 +94,17 @@ func collect(K int) []model.Direction {
 func TestWinningK1(t *testing.T) {
         K := 1
         player := 1
-        root := &model.Cell{
-                D: []*model.Cell{
-                        &model.Cell{IsClaimed: true, Player: player},
-                        &model.Cell{IsClaimed: true, Player: player},
+        root := &m.Cell{
+                D: []*m.Cell{
+                        &m.Cell{IsClaimed: true, Player: player},
+                        &m.Cell{IsClaimed: true, Player: player},
                 },
         }
-        rules := &model.Rules{InARow: 2}
-        if !isWinningVector(K, root, player, rules, model.Point{0}, model.Direction{Incline}) {
+        rules := &m.Rules{InARow: 2}
+        if !isWinningVector(K, root, player, rules, m.Point{0}, m.Direction{Incline}) {
                 t.Errorf("Expected K1 win.")
         }
-        if !isWinningVector(K, root, player, rules, model.Point{1}, model.Direction{Decline}) {
+        if !isWinningVector(K, root, player, rules, m.Point{1}, m.Direction{Decline}) {
                 t.Errorf("Expected K1 win.")
         }
 }
@@ -112,17 +112,17 @@ func TestWinningK1(t *testing.T) {
 func TestNotWinningK1(t *testing.T) {
         K := 1
         player := 1
-        root := &model.Cell{
-                D: []*model.Cell{
-                        &model.Cell{IsClaimed: true, Player: player},
-                        &model.Cell{IsClaimed: false},
+        root := &m.Cell{
+                D: []*m.Cell{
+                        &m.Cell{IsClaimed: true, Player: player},
+                        &m.Cell{IsClaimed: false},
                 },
         }
-        rules := &model.Rules{InARow: 2}
-        if isWinningVector(K, root, player, rules, model.Point{0}, model.Direction{Incline}) {
+        rules := &m.Rules{InARow: 2}
+        if isWinningVector(K, root, player, rules, m.Point{0}, m.Direction{Incline}) {
                 t.Errorf("Expected no K1 win.")
         }
-        if isWinningVector(K, root, player, rules, model.Point{1}, model.Direction{Decline}) {
+        if isWinningVector(K, root, player, rules, m.Point{1}, m.Direction{Decline}) {
                 t.Errorf("Expected no K1 win.")
         }
 }
@@ -130,39 +130,39 @@ func TestNotWinningK1(t *testing.T) {
 func TestWinningK2Diagonal(t *testing.T) {
         K := 2
         player := 1
-        root := &model.Cell{
-                D: []*model.Cell{
-                        &model.Cell{
-                                D: []*model.Cell{
-                                        &model.Cell{IsClaimed: true, Player: player},
-                                        &model.Cell{IsClaimed: false},
+        root := &m.Cell{
+                D: []*m.Cell{
+                        &m.Cell{
+                                D: []*m.Cell{
+                                        &m.Cell{IsClaimed: true, Player: player},
+                                        &m.Cell{IsClaimed: false},
                                 },
                         },
-                        &model.Cell{
-                                D: []*model.Cell{
-                                        &model.Cell{IsClaimed: false},
-                                        &model.Cell{IsClaimed: true, Player: player},
+                        &m.Cell{
+                                D: []*m.Cell{
+                                        &m.Cell{IsClaimed: false},
+                                        &m.Cell{IsClaimed: true, Player: player},
                                 },
                         },
                 },
         }
-        rules := &model.Rules{InARow: 2}
-        if !isWinningVector(K, root, player, rules, model.Point{0,0}, model.Direction{Incline, Incline}) {
+        rules := &m.Rules{InARow: 2}
+        if !isWinningVector(K, root, player, rules, m.Point{0,0}, m.Direction{Incline, Incline}) {
                 t.Errorf("Expected K2 diagonal win")
         }
-        if !isWinningVector(K, root, player, rules, model.Point{1,1}, model.Direction{Decline, Decline}) {
+        if !isWinningVector(K, root, player, rules, m.Point{1,1}, m.Direction{Decline, Decline}) {
                 t.Errorf("Expected K2 diagonal win")
         }
-        if isWinningVector(K, root, player, rules, model.Point{1,0}, model.Direction{Decline, Incline}) {
+        if isWinningVector(K, root, player, rules, m.Point{1,0}, m.Direction{Decline, Incline}) {
                 t.Errorf("Unexpected K2 diagonal win")
         }
-        if isWinningVector(K, root, player, rules, model.Point{0,1}, model.Direction{Incline, Decline}) {
+        if isWinningVector(K, root, player, rules, m.Point{0,1}, m.Direction{Incline, Decline}) {
                 t.Errorf("Unexpected K2 diagonal win")
         }
-        if isWinningVector(K, root, player, rules, model.Point{0,0}, model.Direction{Neutral, Decline}) {
+        if isWinningVector(K, root, player, rules, m.Point{0,0}, m.Direction{Neutral, Decline}) {
                 t.Errorf("Unexpected K2 out-of-bounds win")
         }
-        if isWinningVector(K, root, player, rules, model.Point{1,1}, model.Direction{Incline, Neutral}) {
+        if isWinningVector(K, root, player, rules, m.Point{1,1}, m.Direction{Incline, Neutral}) {
                 t.Errorf("Unexpected K2 out-of-bounds win")
         }
 }
@@ -170,55 +170,55 @@ func TestWinningK2Diagonal(t *testing.T) {
 func TestNotWinningK2(t *testing.T) {
         K := 2
         player := 1
-        root := &model.Cell{
-                D: []*model.Cell{
-                        &model.Cell{
-                                D: []*model.Cell{
-                                        &model.Cell{IsClaimed: true, Player: player},
-                                        &model.Cell{IsClaimed: true, Player: player},
+        root := &m.Cell{
+                D: []*m.Cell{
+                        &m.Cell{
+                                D: []*m.Cell{
+                                        &m.Cell{IsClaimed: true, Player: player},
+                                        &m.Cell{IsClaimed: true, Player: player},
                                 },
                         },
-                        &model.Cell{
-                                D: []*model.Cell{
-                                        &model.Cell{IsClaimed: true, Player: player},
-                                        &model.Cell{IsClaimed: true, Player: player},
+                        &m.Cell{
+                                D: []*m.Cell{
+                                        &m.Cell{IsClaimed: true, Player: player},
+                                        &m.Cell{IsClaimed: true, Player: player},
                                 },
                         },
                 },
         }
-        rules := &model.Rules{InARow: 2}
-        if isWinningVector(K, root, player, rules, model.Point{0,0}, model.Direction{Neutral, Neutral}) {
+        rules := &m.Rules{InARow: 2}
+        if isWinningVector(K, root, player, rules, m.Point{0,0}, m.Direction{Neutral, Neutral}) {
                 t.Errorf("Expected no K2 neutral win")
         }
 }
 
 func TestEachPoint(t *testing.T) {
         K := 2
-        root := &model.Cell{
-                D: []*model.Cell{
-                        &model.Cell{
-                                D: []*model.Cell{
-                                        &model.Cell{},
-                                        &model.Cell{},
+        root := &m.Cell{
+                D: []*m.Cell{
+                        &m.Cell{
+                                D: []*m.Cell{
+                                        &m.Cell{},
+                                        &m.Cell{},
                                 },
                         },
-                        &model.Cell{
-                                D: []*model.Cell{
-                                        &model.Cell{},
-                                        &model.Cell{},
+                        &m.Cell{
+                                D: []*m.Cell{
+                                        &m.Cell{},
+                                        &m.Cell{},
                                 },
                         },
                 },
         }
-        expect := []model.Point{
-                model.Point{0, 0},
-                model.Point{1, 0},
-                model.Point{0, 1},
-                model.Point{1, 1},
+        expect := []m.Point{
+                m.Point{0, 0},
+                m.Point{1, 0},
+                m.Point{0, 1},
+                m.Point{1, 1},
         }
-        actual := make([]model.Point, 0)
-        eachPoint(K, root, func(p model.Point) {
-                point := make(model.Point, len(p))
+        actual := make([]m.Point, 0)
+        eachPoint(K, root, func(p m.Point) {
+                point := make(m.Point, len(p))
                 copy(point, p)
                 actual = append(actual, point)
         })
