@@ -10,6 +10,8 @@ const newGameForm = `
     <form action="/game" method="post">
       <div>Handle: <input type="text" name="handle"></div>
       <div>PlayerCount: <input type="text" name="playerCount"></div>
+      <div>K: <input type="text" name="k"></div>
+      <div>Size: <input type="text" name="size"></div>
       <div><input type="submit" value="Create"></div>
     </form>
   </body>

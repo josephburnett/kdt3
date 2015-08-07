@@ -21,6 +21,22 @@ type Board struct {
         Size int
 }
 
+func NewBoard(K, size int) *Board {
+        board := &Board{K:K, Size: size, D: &Cell{}}
+        var populate func(*Cell, int)
+        populate = func(cell *Cell, depth int) {
+                if depth > 0 {
+                        cell.D = make([]*Cell, size)
+                        for i, _ := range cell.D {
+                                cell.D[i] = &Cell{}
+                                populate(cell.D[i], depth -1)
+                        }
+                }
+        }
+        populate(board.D, K)
+        return board
+}
+
 type Cell struct {
         D []*Cell
         Player int
