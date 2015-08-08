@@ -2,6 +2,7 @@ package kdt3
 
 import (
         "fmt"
+        "html/template"
         "net/http"
 
         "appengine"
@@ -9,6 +10,7 @@ import (
         "appengine/user"
 
         "kdt3/model"
+        "kdt3/view"
 )
 
 func init() {
@@ -68,7 +70,9 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
         }
-        err = getGameTemplate.Execute(w, game)
+        gameView := &view.ViewableGame{Game: game}
+        gameView.BoardHTML = template.HTML((&view.ViewableBoard{gameView.Board}).View())
+        err = getGameTemplate.Execute(w, gameView)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
         }

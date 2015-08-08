@@ -31,7 +31,8 @@ var getGameTemplate = html.Must(html.New("getgame").Parse(getGameTemplateHTML))
 const getGameTemplateHTML = `
 <html>
   <body>
-    <pre>{{.}}</pre>
+    <div><h1>{{.GameId}} ({{.Turn}})</h1></div>
+    <div>{{.BoardHTML}}</div>
   </body>
 <html>
 `
