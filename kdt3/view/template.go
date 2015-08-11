@@ -25,7 +25,10 @@ const postGameTemplateHTML = `
 <html>
   <h3>New Game</h3>
   <body>
-    <p>Click <a href="/game/{{.GameId}}">{{.GameId}}</a> to play!</p>
+    <p>Share these links to play:</p>
+    <ol>
+    {{range .PlayerIds}}<li><a href="game/{{.}}">{{.}}</a></li>{{end}}
+    </ol>
   </body>
 </html>
 `

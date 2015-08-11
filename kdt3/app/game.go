@@ -11,6 +11,20 @@ import (
         m "kdt3/model"
 )
 
+func loadGame(c appengine.Context, playerId string) (*m.Game, error) {
+        player := &m.Player{}
+        _, err := memcache.JSON.Get(c, "player::" + playerId, player)
+        if err != nil {
+                return nil, err
+        }
+        game := &m.Game{}
+        _, err = memcache.JSON.Get(c, "game::" + player.GameId, game)
+        if err != nil {
+                return nil, err
+        }
+        return game, nil
+}
+
 func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
         // parameters
         playerCount, err := strconv.Atoi(r.FormValue("playerCount"))
@@ -42,7 +56,7 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
                         Handle: handles[i],
                 }
                 items[i] = &memcache.Item {
-                        Key: player.PlayerId,
+                        Key: "player::" + player.PlayerId,
                         Object: player,
                         Expiration: 24 * time.Hour,
                 }
@@ -56,7 +70,7 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
                 Board: board,
         }
         items[playerCount] = &memcache.Item {
-                Key: gameId,
+                Key: "game::" + gameId,
                 Object: game,
                 Expiration: 25 * time.Hour,
         }

@@ -5,10 +5,8 @@ import (
         "net/http"
 
         "appengine"
-        "appengine/memcache"
         "appengine/user"
 
-        "kdt3/model"
         "kdt3/view"
 )
 
@@ -71,8 +69,7 @@ func getGame(w http.ResponseWriter, r *http.Request) {
                 return
         }
         id := r.URL.Path[len("/game/"):]
-        game := &model.Game{}
-        _, err := memcache.JSON.Get(c, id, game)
+        game, err := loadGame(c, id)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
