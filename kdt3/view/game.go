@@ -27,13 +27,15 @@ func (b *ViewableBoard) View() string {
         rowEnd := "</tr>"
         columnBegin := "<td><div style=\"border: 1px solid;\">"
         columnEnd := "</div></td>"
+        cellBegin := "<div style=\"width: 30px; height: 30px;\">"
+        cellEnd := "</div>"
         var recur func(*m.Cell, int) string
         recur = func(c *m.Cell, depth int) string {
                 if depth == 0 {
                         if c.IsClaimed {
-                                return strconv.Itoa(c.Player)
+                                return cellBegin + strconv.Itoa(c.Player) + cellEnd
                         } else {
-                                return "&nbsp"
+                                return cellBegin + "&nbsp" + cellEnd
                         }
                 } else if depth % 2 == 0 {
                         table := tableBegin
