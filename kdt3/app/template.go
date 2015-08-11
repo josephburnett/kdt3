@@ -4,6 +4,8 @@ import (
         html "html/template"
 )
 
+// all of this should be in the view package
+
 const newGameForm = `
 <html>
   <body>

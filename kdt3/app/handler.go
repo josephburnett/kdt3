@@ -18,6 +18,7 @@ func init() {
         http.HandleFunc("/new", getNew)
         http.HandleFunc("/game", postGame)
         http.HandleFunc("/game/", getGame)
+        //http.HandleFunc("/move/", postMove)
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -50,10 +51,12 @@ func postGame(w http.ResponseWriter, r *http.Request) {
         game, err := createGame(c, r)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
         }
         err = postGameTemplate.Execute(w, game)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
         }
 }
 
@@ -69,15 +72,36 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         _, err := memcache.JSON.Get(c, id, game)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
         }
+        // this should be in the view package
         gameView := &view.ViewableGame{Game: game}
         gameView.BoardHTML = template.HTML((&view.ViewableBoard{gameView.Board}).View())
         err = getGameTemplate.Execute(w, gameView)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
         }
 }
-
+/*
+func postMove(w http.ResponseWriter, r *http.Request) {
+        c := appengine.NewContext(r)
+        u := user.Current(c)
+        if u == nil {
+                redirectLogin(c, w, r)
+                return
+        }
+        id := r.URL.Path[len("/move/"):]
+        game := &model.Game{}
+        _, err := memcache.JSON.Get(c, id, game)
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }
+        gameMove := &engine.MovableGame{game}
+        //
+}
+*/
 func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
         url, err := user.LoginURL(c, r.URL.String())
         if err != nil {
@@ -86,5 +110,4 @@ func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) 
         }
         w.Header().Set("location", url)
         w.WriteHeader(http.StatusFound)
-        return
 }
