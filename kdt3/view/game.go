@@ -9,7 +9,11 @@ import (
 
 type ViewableGame struct {
         *m.Game
-        BoardHTML template.HTML
+}
+
+func (g *ViewableGame) View() template.HTML {
+        boardView := &ViewableBoard{g.Board}
+        return template.HTML(boardView.View())
 }
 
 type ViewableBoard struct {
@@ -49,6 +53,6 @@ func (b *ViewableBoard) View() string {
         if b.K %2 == 0 {
                 return recur(b.D, b.K)
         } else {
-                return tableBegin + "<tr>" + recur(b.D, b.K) + "</tr>" + tableEnd
+                return tableBegin + rowBegin + recur(b.D, b.K) + rowEnd + tableEnd
         }
 }

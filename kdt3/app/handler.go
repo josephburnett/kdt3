@@ -2,7 +2,6 @@ package kdt3
 
 import (
         "fmt"
-        "html/template"
         "net/http"
 
         "appengine"
@@ -38,7 +37,11 @@ func getNew(w http.ResponseWriter, r *http.Request) {
                 redirectLogin(c, w, r)
                 return
         }
-        fmt.Fprint(w, newGameForm)
+        err := view.NewGameTemplate.Execute(w, nil)
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }
 }
 
 func postGame(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +56,7 @@ func postGame(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }
-        err = postGameTemplate.Execute(w, game)
+        err = view.PostGameTemplate.Execute(w, game)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
@@ -74,10 +77,8 @@ func getGame(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }
-        // this should be in the view package
-        gameView := &view.ViewableGame{Game: game}
-        gameView.BoardHTML = template.HTML((&view.ViewableBoard{gameView.Board}).View())
-        err = getGameTemplate.Execute(w, gameView)
+        gameView := &view.ViewableGame{game}
+        err = view.GetGameTemplate.Execute(w, gameView)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return

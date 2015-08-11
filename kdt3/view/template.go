@@ -1,14 +1,14 @@
-package kdt3
+package view
 
 import (
         html "html/template"
 )
 
-// all of this should be in the view package
-
-const newGameForm = `
+var NewGameTemplate = html.Must(html.New("getroot").Parse(newGameTemplateHTML))
+const newGameTemplateHTML = `
 <html>
   <body>
+    <h3>New Game</h3>
     <form action="/game" method="post">
       <div>Handle: <input type="text" name="handle"></div>
       <div>PlayerCount: <input type="text" name="playerCount"></div>
@@ -20,21 +20,22 @@ const newGameForm = `
 </html>
 `
 
-var postGameTemplate = html.Must(html.New("postgame").Parse(postGameTemplateHTML))
+var PostGameTemplate = html.Must(html.New("postgame").Parse(postGameTemplateHTML))
 const postGameTemplateHTML = `
 <html>
+  <h3>New Game</h3>
   <body>
     <p>Click <a href="/game/{{.GameId}}">{{.GameId}}</a> to play!</p>
   </body>
 </html>
 `
 
-var getGameTemplate = html.Must(html.New("getgame").Parse(getGameTemplateHTML))
+var GetGameTemplate = html.Must(html.New("getgame").Parse(getGameTemplateHTML))
 const getGameTemplateHTML = `
 <html>
   <body>
-    <div><h1>{{.GameId}} ({{.Turn}})</h1></div>
-    <div>{{.BoardHTML}}</div>
+    <h3>{{.GameId}} ({{.Turn}})</h3>
+    <div>{{.View}}</div>
   </body>
 <html>
 `
