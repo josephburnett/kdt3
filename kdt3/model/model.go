@@ -82,6 +82,14 @@ func (p Point) Clone() Point {
         return point
 }
 
+func (p Point) String() string {
+        ss := make([]string, len(p))
+        for i, v := range p {
+                ss[i] = strconv.Itoa(v)
+        }
+        return strings.Join(ss,",")
+}
+
 func NewSegment(p Point, d Direction, length int) Segment {
         segment := make(Segment, length)
         segment[0] = p.Clone()

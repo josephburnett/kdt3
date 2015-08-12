@@ -76,7 +76,7 @@ func getGame(w http.ResponseWriter, r *http.Request) {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }
-        gameView := &view.ViewableGame{game}
+        gameView := &view.ViewableGame{game, id}
         err = view.GetGameTemplate.Execute(w, gameView)
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,7 +103,22 @@ func postMove(w http.ResponseWriter, r *http.Request) {
                 return
         }
         gameMove := &engine.MovableGame{game}
-        gameMove.Move(point)
+        err = gameMove.Move(id, point)
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusPreconditionFailed)
+                return
+        }
+        err = saveGame(c, gameMove.Game)
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }
+        gameView := &view.ViewableGame{gameMove.Game, id}
+        err = view.GetGameTemplate.Execute(w, gameView)
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }
 }
 
 func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {

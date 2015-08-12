@@ -25,6 +25,16 @@ func loadGame(c appengine.Context, playerId string) (*m.Game, error) {
         return game, nil
 }
 
+func saveGame(c appengine.Context, game *m.Game) error {
+        item := &memcache.Item {
+                Key: "game::" + game.GameId,
+                Object: game,
+                Expiration: 25 * time.Hour,
+        }
+        err := memcache.JSON.Set(c, item)
+        return err
+}
+
 func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
         // parameters
         playerCount, err := strconv.Atoi(r.FormValue("playerCount"))
