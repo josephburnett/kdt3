@@ -7,6 +7,8 @@ import (
         "appengine"
         "appengine/user"
 
+        "kdt3/engine"
+        m "kdt3/model"
         "kdt3/view"
 )
 
@@ -15,7 +17,7 @@ func init() {
         http.HandleFunc("/new", getNew)
         http.HandleFunc("/game", postGame)
         http.HandleFunc("/game/", getGame)
-        //http.HandleFunc("/move/", postMove)
+        http.HandleFunc("/move/", postMove)
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +83,7 @@ func getGame(w http.ResponseWriter, r *http.Request) {
                 return
         }
 }
-/*
+
 func postMove(w http.ResponseWriter, r *http.Request) {
         c := appengine.NewContext(r)
         u := user.Current(c)
@@ -90,16 +92,20 @@ func postMove(w http.ResponseWriter, r *http.Request) {
                 return
         }
         id := r.URL.Path[len("/move/"):]
-        game := &model.Game{}
-        _, err := memcache.JSON.Get(c, id, game)
+        game, err := loadGame(c, id)
+        if err != nil {
+                http.Error(w, err.Error() + "id:" + id, http.StatusInternalServerError)
+                return
+        }
+        point, err := m.ParsePoint(game.Board.K, game.Board.Size, r.FormValue("point"))
         if err != nil {
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }
         gameMove := &engine.MovableGame{game}
-        //
+        gameMove.Move(point)
 }
-*/
+
 func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
         url, err := user.LoginURL(c, r.URL.String())
         if err != nil {

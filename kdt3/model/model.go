@@ -1,5 +1,11 @@
 package model
 
+import (
+        "errors"
+        "strconv"
+        "strings"
+)
+
 type Player struct {
         PlayerId string
         GameId string
@@ -50,6 +56,25 @@ type Rules struct {
 type Direction []int
 type Point []int
 type Segment []Point
+
+func ParsePoint(K, size int, s string) (Point, error) {
+        ss := strings.Split(s, ",")
+        if len(ss) != K {
+                return nil, errors.New("Invalid point: incorrect number of dimensions.")
+        }
+        p := make(Point, K)
+        for i, v := range ss {
+                d, err := strconv.Atoi(v)
+                if err != nil {
+                        return nil, err
+                }
+                if d < 0 || d > size-1 {
+                        return nil, errors.New("Invalid point: out of bounds.")
+                }
+                p[i] = d
+        }
+        return p, nil
+}
 
 func (p Point) Clone() Point {
         point := make(Point, len(p))
