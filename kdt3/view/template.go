@@ -9,7 +9,13 @@ const rootTemplateHTML = `
 <html>
   <body>
     <h3>K-D Tic Tac Toe</h3>
-    <p>Welcome {{.}}.  Click <a href="/new">here</a> to play!</p>
+    <p>Welcome {{.}}. Choose a game style below:</p>
+    <ul>
+      <li><a href="/game?handle=Player 1;playerCount=2;k=2;size=3;inarow=3">Classic</a></li>
+      <li><a href="/game?handle=Player 1;playerCount=2;k=3;size=4;inarow=4">Deep Thinker (3D)</a></li>
+      <li><a href="/game?handle=Player 1;playerCount=4;k=4;size=5;inarow=5">Insane (4 players in 4 dimensions)</a></li>
+      <li><a href="/new">Custom</a></li>
+    </ul>
   </body>
 </html>
 `
@@ -39,7 +45,7 @@ const postGameTemplateHTML = `
   <body>
     <p>Share these links to play:</p>
     <ol>
-    {{range .Players}}<li><a href="game/{{.PlayerId}}">{{.Handle}}</a></li>{{end}}
+    {{range .Players}}<li><a href="game/{{.PlayerId}}?message=Game on!">{{.Handle}}</a></li>{{end}}
     </ol>
   </body>
 </html>
