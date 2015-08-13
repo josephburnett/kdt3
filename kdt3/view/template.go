@@ -49,6 +49,7 @@ const getGameTemplateHTML = `
   <body>
     <h3>{{.PlayerHandle}}</h3>
     <p>{{.Message}}</p>
+    {{if .Won}}<p>Game over!</p>{{end}}
     <div>{{.View}}</div>
     <div>{{.PlayerList}}</div>
   </body>

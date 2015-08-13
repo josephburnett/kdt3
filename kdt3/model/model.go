@@ -19,8 +19,9 @@ type Game struct {
         Players []*Player
         Owner int
         Turn int
-        Wins []Point
+        Won bool
         Board *Board
+        Rules *Rules
 }
 
 type Board struct {

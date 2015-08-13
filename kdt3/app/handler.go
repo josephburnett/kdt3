@@ -94,6 +94,10 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         if internalError(w, err) {
                 return
         }
+        if game.Won {
+                http.Redirect(w, r, "/game/"+id, http.StatusFound)
+                return
+        }
         point, err := m.ParsePoint(game.Board.K, game.Board.Size, r.FormValue("point"))
         if internalError(w, err) {
                 return
@@ -103,6 +107,12 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         if err != nil {
                 http.Redirect(w, r, "/game/"+id+"?message="+err.Error(), http.StatusFound)
                 return
+        }
+        gameWin := &engine.WinnableGame{game}
+        if gameWin.IsWin() {
+                game.Won = true
+        } else {
+                gameMove.AdvanceTurn()
         }
         err = saveGame(c, gameMove.Game)
         if internalError(w, err) {

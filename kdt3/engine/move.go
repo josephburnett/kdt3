@@ -2,7 +2,7 @@ package engine
 
 import (
         "errors"
-        
+
         m "kdt3/model"
 )
 
@@ -23,6 +23,9 @@ func (g *MovableGame) Move(playerId string, point m.Point) error {
         }
         cell.IsClaimed = true
         cell.Player = g.Turn
-        g.Turn = (g.Turn + 1) % len(g.PlayerIds)
         return nil
+}
+
+func (g *MovableGame) AdvanceTurn() {
+        g.Turn = (g.Turn + 1) % len(g.PlayerIds)
 }

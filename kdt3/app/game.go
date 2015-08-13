@@ -81,6 +81,7 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
                 Owner: 0,
                 Turn: 0,
                 Board: board,
+                Rules: &m.Rules{InARow: 3},
         }
         items[playerCount] = &memcache.Item {
                 Key: "game::" + gameId,

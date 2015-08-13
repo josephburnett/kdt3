@@ -10,6 +10,19 @@ const (
         Incline = 1
 )
 
+type WinnableGame struct {
+        *model.Game
+}
+
+func (g *WinnableGame) IsWin() bool {
+        boardWin := &WinnableBoard{g.Board}
+        wins := boardWin.GetWins(g.Turn, g.Rules)
+        if len(wins) == 0 {
+                return false
+        }
+        return true
+}
+
 type WinnableBoard struct {
         *model.Board
 }
