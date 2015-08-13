@@ -1,7 +1,6 @@
 package kdt3
 
 import (
-        "fmt"
         "net/http"
 
         "appengine"
@@ -27,7 +26,10 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
                 redirectLogin(c, w, r)
                 return
         }
-        fmt.Fprintf(w, "Hello %v.", u)
+        err := view.RootTemplate.Execute(w, u)
+        if internalError(w, err) {
+                return
+        }
 }
 
 func getNew(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +40,7 @@ func getNew(w http.ResponseWriter, r *http.Request) {
                 return
         }
         err := view.NewGameTemplate.Execute(w, nil)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
 }
@@ -52,13 +53,11 @@ func postGame(w http.ResponseWriter, r *http.Request) {
                 return
         }
         game, err := createGame(c, r)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
         err = view.PostGameTemplate.Execute(w, game)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
 }
@@ -72,14 +71,13 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         }
         id := r.URL.Path[len("/game/"):]
         game, err := loadGame(c, id)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
-        gameView := &view.ViewableGame{game, id}
+        message := r.FormValue("message")
+        gameView := &view.ViewableGame{game, id, message}
         err = view.GetGameTemplate.Execute(w, gameView)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
 }
@@ -93,40 +91,40 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         }
         id := r.URL.Path[len("/move/"):]
         game, err := loadGame(c, id)
-        if err != nil {
-                http.Error(w, err.Error() + "id:" + id, http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
         point, err := m.ParsePoint(game.Board.K, game.Board.Size, r.FormValue("point"))
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
         gameMove := &engine.MovableGame{game}
         err = gameMove.Move(id, point)
         if err != nil {
-                http.Error(w, err.Error(), http.StatusPreconditionFailed)
+                http.Redirect(w, r, "/game/"+id+"?message="+err.Error(), http.StatusFound)
                 return
         }
         err = saveGame(c, gameMove.Game)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
-        gameView := &view.ViewableGame{gameMove.Game, id}
-        err = view.GetGameTemplate.Execute(w, gameView)
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
-                return
-        }
+        http.Redirect(w, r, "/game/"+id+"?message=Move accepted.", http.StatusFound)
 }
 
 func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
         url, err := user.LoginURL(c, r.URL.String())
-        if err != nil {
-                http.Error(w, err.Error(), http.StatusInternalServerError)
+        if internalError(w, err) {
                 return
         }
         w.Header().Set("location", url)
         w.WriteHeader(http.StatusFound)
+}
+
+func internalError(w http.ResponseWriter, err error) bool {
+        if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return true
+        } else {
+                return false
+        }
 }

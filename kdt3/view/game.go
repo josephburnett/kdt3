@@ -10,11 +10,34 @@ import (
 type ViewableGame struct {
         *m.Game
         PlayerId string
+        Message string
 }
 
 func (g *ViewableGame) View() template.HTML {
         boardView := &ViewableBoard{g.Board, g.PlayerId}
         return template.HTML(boardView.View())
+}
+
+func (g *ViewableGame) PlayerList() template.HTML {
+        players := "<ol>"
+        for i, p := range g.Players {
+                if i == g.Turn {
+                        players += "<li><b>" + p.Handle + "</b></li>"
+                } else {
+                        players += "<li>" + p.Handle + "</b></li>"
+                }
+        }
+        players += "</ol>"
+        return template.HTML(players)
+}
+
+func (g *ViewableGame) PlayerHandle() string {
+        for i, p := range g.PlayerIds {
+                if p == g.PlayerId {
+                        return g.Players[i].Handle
+                }
+        }
+        return "Unknown"
 }
 
 type ViewableBoard struct {
@@ -36,7 +59,7 @@ func (b *ViewableBoard) View() string {
         recur = func(c *m.Cell, depth int) string {
                 if depth == 0 {
                         if c.IsClaimed {
-                                return cellBegin + strconv.Itoa(c.Player) + cellEnd
+                                return cellBegin + strconv.Itoa(c.Player+1) + cellEnd
                         } else {
                                 return cellBegin + "<a href=\"/move/" +
                                        b.PlayerId + "?point=" + point.String() +

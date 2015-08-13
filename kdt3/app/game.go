@@ -51,6 +51,7 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
         }
         gameId := newId()
         playerIds := make([]string, playerCount)
+        players := make([]*m.Player, playerCount)
         handles := make([]string, playerCount)
         for i, _ := range playerIds {
                 playerIds[i] = newId()
@@ -65,6 +66,7 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
                         GameId: gameId,
                         Handle: handles[i],
                 }
+                players[i] = player
                 items[i] = &memcache.Item {
                         Key: "player::" + player.PlayerId,
                         Object: player,
@@ -75,6 +77,7 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
         game := &m.Game {
                 GameId: gameId,
                 PlayerIds: playerIds,
+                Players: players,
                 Owner: 0,
                 Turn: 0,
                 Board: board,

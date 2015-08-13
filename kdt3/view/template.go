@@ -4,7 +4,17 @@ import (
         html "html/template"
 )
 
-var NewGameTemplate = html.Must(html.New("getroot").Parse(newGameTemplateHTML))
+var RootTemplate = html.Must(html.New("root").Parse(rootTemplateHTML))
+const rootTemplateHTML = `
+<html>
+  <body>
+    <h3>K-D Tic Tac Toe</h3>
+    <p>Welcome {{.}}.  Click <a href="/new">here</a> to play!</p>
+  </body>
+</html>
+`
+
+var NewGameTemplate = html.Must(html.New("getnew").Parse(newGameTemplateHTML))
 const newGameTemplateHTML = `
 <html>
   <body>
@@ -27,7 +37,7 @@ const postGameTemplateHTML = `
   <body>
     <p>Share these links to play:</p>
     <ol>
-    {{range .PlayerIds}}<li><a href="game/{{.}}">{{.}}</a></li>{{end}}
+    {{range .Players}}<li><a href="game/{{.PlayerId}}">{{.Handle}}</a></li>{{end}}
     </ol>
   </body>
 </html>
@@ -37,8 +47,10 @@ var GetGameTemplate = html.Must(html.New("getgame").Parse(getGameTemplateHTML))
 const getGameTemplateHTML = `
 <html>
   <body>
-    <h3>{{.GameId}} ({{.Turn}})</h3>
+    <h3>{{.PlayerHandle}}</h3>
+    <p>{{.Message}}</p>
     <div>{{.View}}</div>
+    <div>{{.PlayerList}}</div>
   </body>
 <html>
 `

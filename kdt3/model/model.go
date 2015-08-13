@@ -7,6 +7,7 @@ import (
 )
 
 type Player struct {
+        Player int
         PlayerId string
         GameId string
         Handle string
@@ -15,6 +16,7 @@ type Player struct {
 type Game struct {
         GameId string
         PlayerIds []string
+        Players []*Player
         Owner int
         Turn int
         Wins []Point
