@@ -19,11 +19,13 @@ const newGameTemplateHTML = `
 <html>
   <body>
     <h3>New Game</h3>
+    <p>{{.}}</p>
     <form action="/game" method="post">
       <div>Handle: <input type="text" name="handle"></div>
       <div>PlayerCount: <input type="text" name="playerCount"></div>
       <div>K: <input type="text" name="k"></div>
       <div>Size: <input type="text" name="size"></div>
+      <div>In a row: <input type="text" name="inarow"></div>
       <div><input type="submit" value="Create"></div>
     </form>
   </body>

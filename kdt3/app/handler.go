@@ -39,7 +39,8 @@ func getNew(w http.ResponseWriter, r *http.Request) {
                 redirectLogin(c, w, r)
                 return
         }
-        err := view.NewGameTemplate.Execute(w, nil)
+        message := r.FormValue("message")
+        err := view.NewGameTemplate.Execute(w, message)
         if internalError(w, err) {
                 return
         }
@@ -53,7 +54,8 @@ func postGame(w http.ResponseWriter, r *http.Request) {
                 return
         }
         game, err := createGame(c, r)
-        if internalError(w, err) {
+        if err != nil {
+                http.Redirect(w, r, "/new?message="+err.Error(), http.StatusFound)
                 return
         }
         err = view.PostGameTemplate.Execute(w, game)
