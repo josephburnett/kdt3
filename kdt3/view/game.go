@@ -14,8 +14,18 @@ type ViewableGame struct {
 }
 
 func (g *ViewableGame) View() template.HTML {
-        boardView := &ViewableBoard{g.Board, g.PlayerId}
+        player := g.PlayerIndex()
+        boardView := &ViewableBoard{g.Board, g.PlayerId, player}
         return template.HTML(boardView.View())
+}
+
+func (g *ViewableGame) PlayerIndex() int {
+        for i, v := range g.PlayerIds {
+                if g.PlayerId == v {
+                        return i
+                }
+        }
+        return g.Turn
 }
 
 func (g *ViewableGame) PlayerList() template.HTML {
@@ -47,6 +57,7 @@ func (g *ViewableGame) PlayerHandle() string {
 type ViewableBoard struct {
         *m.Board
         PlayerId string
+        Player int
 }
 
 func (b *ViewableBoard) View() string {
@@ -56,18 +67,31 @@ func (b *ViewableBoard) View() string {
         rowEnd := "</tr>"
         columnBegin := "<td><div style=\"border: 1px solid;\">"
         columnEnd := "</div></td>"
-        cellBegin := "<div style=\"width: 30px; height: 30px;\">"
+        cellBegin := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px;\">"
+        cellBeginWin := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #ABF095;\">"
+        cellBeginLoss := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #F7C1C1;\">"
+        cellBeginMyClaim := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #C1EAF7;\">"
+        cellBeginYourClaim := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #E6E3E3;\">"
         cellEnd := "</div>"
         point := make(m.Point, b.K)
         var recur func(*m.Cell, int) string
         recur = func(c *m.Cell, depth int) string {
                 if depth == 0 {
                         if c.IsClaimed {
-                                return cellBegin + strconv.Itoa(c.Player+1) + cellEnd
+                                if c.IsWon {
+                                        if c.Player == b.Player {
+                                                return cellBeginWin + strconv.Itoa(c.Player+1) + cellEnd
+                                        } else {
+                                                return cellBeginLoss + strconv.Itoa(c.Player+1) + cellEnd
+                                        }
+                                } else if c.Player == b.Player {
+                                        return cellBeginMyClaim + strconv.Itoa(c.Player+1) + cellEnd
+                                } else {
+                                        return cellBeginYourClaim + strconv.Itoa(c.Player+1) + cellEnd
+                                }
                         } else {
-                                return cellBegin + "<a href=\"/move/" +
-                                       b.PlayerId + "?point=" + point.String() +
-                                       "\">&nbsp</a>" + cellEnd
+                                return "<a href=\"/move/" + b.PlayerId + "?point=" + point.String() +
+                                       "\">" + cellBegin + cellEnd + "</a>"
                         }
                 } else if depth % 2 == 0 {
                         table := tableBegin

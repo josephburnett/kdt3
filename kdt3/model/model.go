@@ -50,6 +50,7 @@ type Cell struct {
         D []*Cell
         Player int
         IsClaimed bool
+        IsWon bool
 }
 
 type Rules struct {

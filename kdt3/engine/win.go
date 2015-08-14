@@ -20,6 +20,7 @@ func (g *WinnableGame) IsWin() bool {
         if len(wins) == 0 {
                 return false
         }
+        boardWin.AnnotateWins(wins)
         return true
 }
 
@@ -27,7 +28,19 @@ type WinnableBoard struct {
         *model.Board
 }
 
-func (b WinnableBoard) GetWins(player int, rules *model.Rules) (wins []model.Segment) {
+func (b *WinnableBoard) AnnotateWins(wins []model.Segment) {
+        for _, segment := range wins {
+                for _, point := range segment {
+                        cell := b.D
+                        for _, i := range point {
+                                cell = cell.D[i]
+                        }
+                        cell.IsWon = true
+                }
+        }
+}
+
+func (b *WinnableBoard) GetWins(player int, rules *model.Rules) (wins []model.Segment) {
         eachPoint(b.K, b.D, func(p model.Point) {
                 eachDirection(b.K, func(d model.Direction) {
                         if isWinningVector(b.K, b.D, player, rules, p, d) {
