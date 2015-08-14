@@ -31,6 +31,10 @@ func (g *ViewableGame) PlayerList() template.HTML {
         return template.HTML(players)
 }
 
+func (g *ViewableGame) MyTurn() bool {
+        return g.PlayerId == g.PlayerIds[g.Turn]
+}
+
 func (g *ViewableGame) PlayerHandle() string {
         for i, p := range g.PlayerIds {
                 if p == g.PlayerId {

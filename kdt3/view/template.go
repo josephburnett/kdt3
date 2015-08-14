@@ -11,9 +11,9 @@ const rootTemplateHTML = `
     <h3>K-D Tic Tac Toe</h3>
     <p>Welcome {{.}}. Choose a game style below:</p>
     <ul>
-      <li><a href="/game?handle=Player 1;playerCount=2;k=2;size=3;inarow=3">Classic</a></li>
-      <li><a href="/game?handle=Player 1;playerCount=2;k=3;size=4;inarow=4">Deep Thinker (3D)</a></li>
-      <li><a href="/game?handle=Player 1;playerCount=4;k=4;size=5;inarow=5">Insane (4 players in 4 dimensions)</a></li>
+      <li><a href="/game?handle=Player 1;playerCount=2;k=2;size=3;inarow=3">Classic (2D-2P)</a></li>
+      <li><a href="/game?handle=Player 1;playerCount=2;k=3;size=4;inarow=4">Deep Thinker (3D-2P)</a></li>
+      <li><a href="/game?handle=Player 1;playerCount=4;k=4;size=5;inarow=5">Preposterous Party (4D-4P)</a></li>
       <li><a href="/new">Custom</a></li>
     </ul>
   </body>
@@ -40,12 +40,13 @@ const newGameTemplateHTML = `
 
 var PostGameTemplate = html.Must(html.New("postgame").Parse(postGameTemplateHTML))
 const postGameTemplateHTML = `
+{{ $inARow := .Rules.InARow }}
 <html>
   <h3>New Game</h3>
   <body>
     <p>Share these links to play:</p>
     <ol>
-    {{range .Players}}<li><a href="game/{{.PlayerId}}?message=Game on!">{{.Handle}}</a></li>{{end}}
+    {{range .Players}}<li><a href="game/{{.PlayerId}}?message=Game on! Get {{ $inARow }} in a row to win.">{{.Handle}}</a></li>{{end}}
     </ol>
   </body>
 </html>
@@ -55,9 +56,8 @@ var GetGameTemplate = html.Must(html.New("getgame").Parse(getGameTemplateHTML))
 const getGameTemplateHTML = `
 <html>
   <body>
-    <h3>{{.PlayerHandle}}</h3>
-    <p>{{.Message}}</p>
-    {{if .Won}}<p>Game over!</p>{{end}}
+    <h3>{{.PlayerHandle}}{{ if .MyTurn }} (your turn){{end}}</h3>
+    {{if .Won}}<p>Game over!</p>{{else}}<p>{{.Message}}</p>{{end}}
     <div>{{.View}}</div>
     <div>{{.PlayerList}}</div>
   </body>
