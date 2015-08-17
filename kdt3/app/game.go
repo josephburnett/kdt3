@@ -2,35 +2,38 @@ package kdt3
 
 import (
         "net/http"
-        "time"
 
         "appengine"
-        "appengine/memcache"
+        "appengine/datastore"
 
         m "kdt3/model"
 )
 
-func loadGame(c appengine.Context, playerId string) (*m.Game, error) {
-        player := &m.Player{}
-        _, err := memcache.JSON.Get(c, "player::" + playerId, player)
-        if err != nil {
-                return nil, err
-        }
+func loadGame(c appengine.Context, gameId, playerId string) (*m.Game, *m.Player, error) {
+        gameKey := datastore.NewKey(c, "Game", gameId, 0, nil)
         game := &m.Game{}
-        _, err = memcache.JSON.Get(c, "game::" + player.GameId, game)
+        err := datastore.Get(c, gameKey, game)
         if err != nil {
-                return nil, err
+                return nil, nil, err
         }
-        return game, nil
+        playerKey := datastore.NewKey(c, "Player", playerId, 0, gameKey)
+        player := &m.Player{}
+        err = datastore.Get(c, playerKey, player)
+        if err != nil {
+                return game, nil, err
+        }
+        if player.GameId != game.GameId {
+                return game, nil, nil
+        }
+        return game, player, nil
 }
 
 func saveGame(c appengine.Context, game *m.Game) error {
-        item := &memcache.Item {
-                Key: "game::" + game.GameId,
-                Object: game,
-                Expiration: 25 * time.Hour,
-        }
-        err := memcache.JSON.Set(c, item)
+        err := datastore.RunInTransaction(c, func(c appengine.Context) error {
+                gameKey := datastore.NewKey(c, "Game", game.GameId, 0, nil)
+                _, err := datastore.Put(c, gameKey, game)
+                return err
+        }, nil)
         return err
 }
 
@@ -39,22 +42,21 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
         if err != nil {
                 return nil, err
         }
-        items := make([]*memcache.Item, len(game.Players)+1)
-        for i, p := range game.Players {
-                items[i] = &memcache.Item {
-                        Key: "player::" + p.PlayerId,
-                        Object: p,
-                        Expiration: 24 * time.Hour,
+        err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+                gameKey := datastore.NewKey(c, "Game", game.GameId, 0, nil)
+                playerKeys := make([]*datastore.Key, len(game.Players))
+                for i, p := range game.Players {
+                        playerKeys[i] = datastore.NewKey(c, "Player", p.PlayerId, 0, gameKey)
                 }
-        }
-        items[len(game.Players)] = &memcache.Item {
-                Key: "game::" + game.GameId,
-                Object: game,
-                Expiration: 25 * time.Hour,
-        }
-        err = memcache.JSON.AddMulti(c, items)
+                _, err := datastore.Put(c, gameKey, game)
+                if err != nil {
+                        return err
+                }
+                _, err = datastore.PutMulti(c, playerKeys, game.Players)
+                return err
+        }, nil)
         if err != nil {
                 return nil, err
         }
-        return game, err
+        return game, nil
 }

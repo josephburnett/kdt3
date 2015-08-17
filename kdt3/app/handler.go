@@ -71,12 +71,13 @@ func getGame(w http.ResponseWriter, r *http.Request) {
                 redirectLogin(c, w, r)
                 return
         }
-        id := r.URL.Path[len("/game/"):]
-        game, err := loadGame(c, id)
+        gameId := r.URL.Path[len("/game/"):]
+        playerId := r.FormValue("player")
+        game, viewer, err := loadGame(c, gameId, playerId)
         if internalError(w, err) {
                 return
         }
-        gameView := view.NewViewableGame(game, id)
+        gameView := view.NewViewableGame(game, viewer.PlayerId)
         gameView.Message = r.FormValue("message")
         err = view.GetGameTemplate.Execute(w, gameView)
         if internalError(w, err) {
@@ -91,13 +92,14 @@ func postMove(w http.ResponseWriter, r *http.Request) {
                 redirectLogin(c, w, r)
                 return
         }
-        id := r.URL.Path[len("/move/"):]
-        game, err := loadGame(c, id)
+        gameId := r.URL.Path[len("/move/"):]
+        playerId := r.FormValue("Player")
+        game, viewer, err := loadGame(c, gameId, playerId)
         if internalError(w, err) {
                 return
         }
         if game.Won {
-                http.Redirect(w, r, "/game/"+id, http.StatusFound)
+                http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId, http.StatusFound)
                 return
         }
         point, err := m.ParsePoint(game.Board.K, game.Board.Size, r.FormValue("point"))
@@ -105,9 +107,9 @@ func postMove(w http.ResponseWriter, r *http.Request) {
                 return
         }
         gameMove := &engine.MovableGame{game}
-        err = gameMove.Move(id, point)
+        err = gameMove.Move(viewer.PlayerId, point)
         if err != nil {
-                http.Redirect(w, r, "/game/"+id+"?message="+err.Error(), http.StatusFound)
+                http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message="+err.Error(), http.StatusFound)
                 return
         }
         gameWin := &engine.WinnableGame{game}
@@ -120,7 +122,7 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         if internalError(w, err) {
                 return
         }
-        http.Redirect(w, r, "/game/"+id+"?message=Move accepted.", http.StatusFound)
+        http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message=Move accepted.", http.StatusFound)
 }
 
 func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
