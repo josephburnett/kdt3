@@ -77,7 +77,7 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         if internalError(w, err) {
                 return
         }
-        gameView := view.NewViewableGame(game, viewer.PlayerId)
+        gameView := view.NewViewableGame(game, viewer)
         gameView.Message = r.FormValue("message")
         err = view.GetGameTemplate.Execute(w, gameView)
         if internalError(w, err) {
@@ -93,7 +93,7 @@ func postMove(w http.ResponseWriter, r *http.Request) {
                 return
         }
         gameId := r.URL.Path[len("/move/"):]
-        playerId := r.FormValue("Player")
+        playerId := r.FormValue("player")
         game, viewer, err := loadGame(c, gameId, playerId)
         if internalError(w, err) {
                 return

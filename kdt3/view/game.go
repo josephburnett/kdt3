@@ -10,27 +10,30 @@ import (
 type ViewableGame struct {
         *m.Game
         Viewer *m.Player
+        HasViewer bool
         IsMyTurn bool
         Message string
 }
 
-func NewViewableGame(game *m.Game, playerId string) *ViewableGame {
+func NewViewableGame(game *m.Game, viewer *m.Player) *ViewableGame {
         viewableGame := &ViewableGame{
                 Game: game,
+                Viewer: viewer,
         }
-        for _, v := range game.Players {
-                if playerId == v.PlayerId {
-                        viewableGame.Viewer = v
+        if viewer != nil {
+                viewableGame.HasViewer = true
+                if viewer.PlayerId == game.TurnId {
+                        viewableGame.IsMyTurn = true
                 }
-        }
-        if playerId == game.TurnId {
-                viewableGame.IsMyTurn = true
         }
         return viewableGame
 }
 
 func (g *ViewableGame) View() template.HTML {
-        boardView := &ViewableBoard{g.Board, g.Viewer}
+        boardView := &ViewableBoard{
+                Board: g.Board,
+                Viewer: g.Viewer,
+        }
         return template.HTML(boardView.View())
 }
 
@@ -60,20 +63,24 @@ func (b *ViewableBoard) View() string {
                         classes := "cell"
                         if c.IsClaimed {
                                 if c.IsWon {
-                                        if c.Player == b.Viewer.PlayerOrder {
+                                        if b.Viewer == nil || c.Player == b.Viewer.PlayerOrder {
                                                 classes += " win"
                                         } else {
                                                 classes += " loss"
                                         }
-                                } else if c.Player == b.Viewer.PlayerOrder {
+                                } else if b.Viewer != nil && c.Player == b.Viewer.PlayerOrder {
                                         classes += " mine"
                                 } else {
                                         classes += " yours"
                                 }
                                 return "<div class=\"" + classes + "\">" + strconv.Itoa(c.Player+1) + "</div>"
                         } else {
-                                return "<a href=\"/move/" + b.Viewer.PlayerId + "?point=" + point.String() +
-                                       "\"><div class=\"" + classes + "\"></div></a>"
+                                if b.Viewer == nil {
+                                        return "<div class=\"" + classes + "\"></div>"
+                                } else {
+                                        return "<a href=\"/move/" + b.Viewer.GameId + "?player="+ b.Viewer.PlayerId +
+                                        ";point=" + point.String() + "\"><div class=\"" + classes + "\"></div></a>"
+                                }
                         }
                 } else if depth % 2 == 0 {
                         table := "<table>"

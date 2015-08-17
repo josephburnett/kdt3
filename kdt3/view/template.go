@@ -88,7 +88,7 @@ const postGameTemplateHTML = `
   <body>
     <p>Share these links to play:</p>
     <ol>
-    {{range .Players}}<li><a href="game/{{.PlayerId}}?message=Game on! Get {{ $inARow }} in a row to win.">{{.Handle}}</a></li>{{end}}
+    {{range .Players}}<li><a href="game/{{.GameId}}?player={{.PlayerId}};message=Game on! Get {{ $inARow }} in a row to win.">{{.Handle}}</a></li>{{end}}
     </ol>
   </body>
 </html>
@@ -103,7 +103,8 @@ const getGameTemplateHTML = `
   {{template "style"}}
   </head>
   <body>
-    <h3>{{.Viewer.Handle}}{{ if .IsMyTurn }} (your turn){{end}}</h3>
+    {{if .HasViewer}}<h3>{{.Viewer.Handle}}{{ if .IsMyTurn }} (your turn){{end}}</h3>
+    {{else}}<h3>{{.GameId}}</h3>{{end}}
     {{if .Won}}<p>Game over!</p>{{else}}<p>{{.Message}}</p>{{end}}
     <div>{{.View}}</div>
     <div>{{.PlayerList}}</div>

@@ -16,6 +16,9 @@ func loadGame(c appengine.Context, gameId, playerId string) (*m.Game, *m.Player,
         if err != nil {
                 return nil, nil, err
         }
+        if playerId == "" {
+                return game, nil, nil
+        }
         playerKey := datastore.NewKey(c, "Player", playerId, 0, gameKey)
         player := &m.Player{}
         err = datastore.Get(c, playerKey, player)

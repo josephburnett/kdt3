@@ -1,10 +1,13 @@
 package model
 
 import (
+        "encoding/json"
         "errors"
         "net/http"
         "strconv"
         "strings"
+
+        "appengine/datastore"
 )
 
 type Player struct {
@@ -17,11 +20,138 @@ type Player struct {
 type Game struct {
         GameId string
         Players []*Player
+        PlayerCount int
         TurnOrder int
         TurnId string
         Won bool
         Board *Board
         Rules *Rules
+}
+
+func (g *Game) Load(c <-chan datastore.Property) error {
+        var playersStr string
+        for property := range c {
+                switch {
+                case property.Name == "GameId":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                g.GameId = str
+                        } else {
+                                return errors.New("GameId is not a string")
+                        }
+                case property.Name == "PlayerCount":
+                        i, ok := property.Value.(int64)
+                        if ok {
+                                g.PlayerCount = int(i)
+                        } else {
+                                return errors.New("PlayerCount is not an int")
+                        }
+                case property.Name == "TurnOrder":
+                        i, ok := property.Value.(int64)
+                        if ok {
+                                g.TurnOrder = int(i)
+                        } else {
+                                return errors.New("TurnOrder is not an int")
+                        }
+                case property.Name == "TurnId":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                g.TurnId = str
+                        } else {
+                                return errors.New("TurnId is not an int")
+                        }
+                case property.Name == "Won":
+                        b, ok := property.Value.(bool)
+                        if ok {
+                                g.Won = b
+                        } else {
+                                return errors.New("Won is not a bool")
+                        }
+                case property.Name == "Players":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                playersStr = str
+                        } else {
+                                return errors.New("Players is not a []byte")
+                        }
+                case property.Name == "Board":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                board := new(Board)
+                                json.Unmarshal([]byte(str), board)
+                                g.Board = board
+                        } else {
+                                return errors.New("Board is not a []byte")
+                        }
+                case property.Name == "Rules":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                rules := new(Rules)
+                                json.Unmarshal([]byte(str), rules)
+                                g.Rules = rules
+                        } else {
+                                return errors.New("Rules is not a []byte")
+                        }
+                default:
+                        return errors.New("Unknown property name: " + property.Name)
+                }
+        }
+        players := make([]*Player, g.PlayerCount)
+        err := json.Unmarshal([]byte(playersStr), &players)
+        if err != nil {
+                return err
+        }
+        g.Players = players
+        return nil
+}
+
+func (g *Game) Save(c chan<- datastore.Property) error {
+        defer close(c)
+        c <- datastore.Property{
+                Name: "GameId",
+                Value: g.GameId,
+        }
+        c <- datastore.Property{
+                Name: "PlayerCount",
+                Value: int64(g.PlayerCount),
+        }
+        c <- datastore.Property{
+                Name: "TurnOrder",
+                Value: int64(g.TurnOrder),
+        }
+        c <- datastore.Property{
+                Name: "TurnId",
+                Value: g.TurnId,
+        }
+        c <- datastore.Property{
+                Name: "Won",
+                Value: g.Won,
+        }
+        players, err := json.Marshal(g.Players)
+        if err != nil {
+                return err
+        }
+        c <- datastore.Property{
+                Name: "Players",
+                Value: string(players),
+        }
+        board, err := json.Marshal(g.Board)
+        if err != nil {
+                return err
+        }
+        c <- datastore.Property{
+                Name: "Board",
+                Value: string(board),
+        }
+        rules, err := json.Marshal(g.Rules)
+        if err != nil {
+                return err
+        }
+        c <- datastore.Property{
+                Name: "Rules",
+                Value: string(rules),
+        }
+        return nil
 }
 
 func NewGame(r *http.Request) (*Game, error) {
@@ -66,6 +196,7 @@ func NewGame(r *http.Request) (*Game, error) {
         game := &Game{
                 GameId: gameId,
                 Players: players,
+                PlayerCount: len(players),
                 TurnOrder: 0,
                 TurnId: players[0].PlayerId,
                 Won: false,
