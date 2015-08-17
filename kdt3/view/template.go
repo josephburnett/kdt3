@@ -4,9 +4,41 @@ import (
         html "html/template"
 )
 
-var RootTemplate = html.Must(html.New("root").Parse(rootTemplateHTML))
+const style = `
+{{define "style"}}
+<style>
+  .col {
+    border: 1px solid;
+  }
+  .cell {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+  }
+  .win {
+    background: #ABF095;
+  }
+  .loss {
+    background: #F7C1C1;
+  }
+  .mine {
+    background: #C1EAF7;
+  }
+  .yours {
+    background: #E6E3E3;
+  }
+</style>
+{{end}}
+`
+
+var RootTemplate = html.Must(html.New("root").Parse(style+rootTemplateHTML))
 const rootTemplateHTML = `
+{{define "root"}}
 <html>
+  <head>
+  {{template "style"}}
+  </head>
   <body>
     <h3>K-D Tic Tac Toe</h3>
     <p>Welcome {{.}}. Choose a game style below:</p>
@@ -18,11 +50,16 @@ const rootTemplateHTML = `
     </ul>
   </body>
 </html>
+{{end}}
 `
 
-var NewGameTemplate = html.Must(html.New("getnew").Parse(newGameTemplateHTML))
+var NewGameTemplate = html.Must(html.New("getnew").Parse(style+newGameTemplateHTML))
 const newGameTemplateHTML = `
+{{define "getnew"}}
 <html>
+  <head>
+  {{template "style"}}
+  </head>
   <body>
     <h3>New Game</h3>
     <p>{{.}}</p>
@@ -36,12 +73,17 @@ const newGameTemplateHTML = `
     </form>
   </body>
 </html>
+{{end}}
 `
 
-var PostGameTemplate = html.Must(html.New("postgame").Parse(postGameTemplateHTML))
+var PostGameTemplate = html.Must(html.New("postgame").Parse(style+postGameTemplateHTML))
 const postGameTemplateHTML = `
+{{define "postgame"}}
 {{ $inARow := .Rules.InARow }}
 <html>
+  <head>
+  {{template "style"}}
+  </head>
   <h3>New Game</h3>
   <body>
     <p>Share these links to play:</p>
@@ -50,11 +92,16 @@ const postGameTemplateHTML = `
     </ol>
   </body>
 </html>
+{{end}}
 `
 
-var GetGameTemplate = html.Must(html.New("getgame").Parse(getGameTemplateHTML))
+var GetGameTemplate = html.Must(html.New("getgame").Parse(style+getGameTemplateHTML))
 const getGameTemplateHTML = `
+{{define "getgame"}}
 <html>
+  <head>
+  {{template "style"}}
+  </head>
   <body>
     <h3>{{.PlayerHandle}}{{ if .MyTurn }} (your turn){{end}}</h3>
     {{if .Won}}<p>Game over!</p>{{else}}<p>{{.Message}}</p>{{end}}
@@ -62,4 +109,5 @@ const getGameTemplateHTML = `
     <div>{{.PlayerList}}</div>
   </body>
 <html>
+{{end}}
 `

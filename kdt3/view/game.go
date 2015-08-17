@@ -34,7 +34,7 @@ func (g *ViewableGame) PlayerList() template.HTML {
                 if i == g.Turn {
                         players += "<li><b>" + p.Handle + "</b></li>"
                 } else {
-                        players += "<li>" + p.Handle + "</b></li>"
+                        players += "<li>" + p.Handle + "</li>"
                 }
         }
         players += "</ol>"
@@ -61,51 +61,41 @@ type ViewableBoard struct {
 }
 
 func (b *ViewableBoard) View() string {
-        tableBegin := "<table>"
-        tableEnd := "</table>"
-        rowBegin := "<tr>"
-        rowEnd := "</tr>"
-        columnBegin := "<td><div style=\"border: 1px solid;\">"
-        columnEnd := "</div></td>"
-        cellBegin := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px;\">"
-        cellBeginWin := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #ABF095;\">"
-        cellBeginLoss := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #F7C1C1;\">"
-        cellBeginMyClaim := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #C1EAF7;\">"
-        cellBeginYourClaim := "<div style=\"width: 30px; height: 30px; text-align: center; line-height: 30px; background: #E6E3E3;\">"
-        cellEnd := "</div>"
         point := make(m.Point, b.K)
         var recur func(*m.Cell, int) string
         recur = func(c *m.Cell, depth int) string {
                 if depth == 0 {
+                        classes := "cell"
                         if c.IsClaimed {
                                 if c.IsWon {
                                         if c.Player == b.Player {
-                                                return cellBeginWin + strconv.Itoa(c.Player+1) + cellEnd
+                                                classes += " win"
                                         } else {
-                                                return cellBeginLoss + strconv.Itoa(c.Player+1) + cellEnd
+                                                classes += " loss"
                                         }
                                 } else if c.Player == b.Player {
-                                        return cellBeginMyClaim + strconv.Itoa(c.Player+1) + cellEnd
+                                        classes += " mine"
                                 } else {
-                                        return cellBeginYourClaim + strconv.Itoa(c.Player+1) + cellEnd
+                                        classes += " yours"
                                 }
+                                return "<div class=\"" + classes + "\">" + strconv.Itoa(c.Player+1) + "</div>"
                         } else {
                                 return "<a href=\"/move/" + b.PlayerId + "?point=" + point.String() +
-                                       "\">" + cellBegin + cellEnd + "</a>"
+                                       "\"><div class=\"" + classes + "\"></div></a>"
                         }
                 } else if depth % 2 == 0 {
-                        table := tableBegin
+                        table := "<table>"
                         for i, v := range c.D {
                                 point[b.K-depth] = i
-                                table += rowBegin + recur(v, depth-1) + rowEnd
+                                table += "<tr>" + recur(v, depth-1) + "</tr>"
                         }
-                        table += tableEnd
+                        table += "</table>"
                         return table
                 } else {
                         columns := ""
                         for i, v := range c.D {
                                 point[b.K-depth] = i
-                                columns += columnBegin + recur(v, depth-1) + columnEnd
+                                columns += "<td><div class=\"col\">" + recur(v, depth-1) + "</div></td>"
                         }
                         return columns
                 }
@@ -113,6 +103,6 @@ func (b *ViewableBoard) View() string {
         if b.K %2 == 0 {
                 return recur(b.D, b.K)
         } else {
-                return tableBegin + rowBegin + recur(b.D, b.K) + rowEnd + tableEnd
+                return "<table>" + "<tr>" + recur(b.D, b.K) + "</tr>" + "</table>"
         }
 }
