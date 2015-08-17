@@ -9,29 +9,35 @@ import (
 
 type ViewableGame struct {
         *m.Game
-        PlayerId string
+        Viewer *m.Player
+        IsMyTurn bool
         Message string
 }
 
-func (g *ViewableGame) View() template.HTML {
-        player := g.PlayerIndex()
-        boardView := &ViewableBoard{g.Board, g.PlayerId, player}
-        return template.HTML(boardView.View())
-}
-
-func (g *ViewableGame) PlayerIndex() int {
-        for i, v := range g.PlayerIds {
-                if g.PlayerId == v {
-                        return i
+func NewViewableGame(game *m.Game, playerId string) *ViewableGame {
+        viewableGame := &ViewableGame{
+                Game: game,
+        }
+        for _, v := range game.Players {
+                if playerId == v.PlayerId {
+                        viewableGame.Viewer = v
                 }
         }
-        return g.Turn
+        if playerId == game.TurnId {
+                viewableGame.IsMyTurn = true
+        }
+        return viewableGame
+}
+
+func (g *ViewableGame) View() template.HTML {
+        boardView := &ViewableBoard{g.Board, g.Viewer}
+        return template.HTML(boardView.View())
 }
 
 func (g *ViewableGame) PlayerList() template.HTML {
         players := "<ol>"
         for i, p := range g.Players {
-                if i == g.Turn {
+                if i == g.TurnOrder {
                         players += "<li><b>" + p.Handle + "</b></li>"
                 } else {
                         players += "<li>" + p.Handle + "</li>"
@@ -41,23 +47,9 @@ func (g *ViewableGame) PlayerList() template.HTML {
         return template.HTML(players)
 }
 
-func (g *ViewableGame) MyTurn() bool {
-        return g.PlayerId == g.PlayerIds[g.Turn]
-}
-
-func (g *ViewableGame) PlayerHandle() string {
-        for i, p := range g.PlayerIds {
-                if p == g.PlayerId {
-                        return g.Players[i].Handle
-                }
-        }
-        return "Unknown"
-}
-
 type ViewableBoard struct {
         *m.Board
-        PlayerId string
-        Player int
+        Viewer *m.Player
 }
 
 func (b *ViewableBoard) View() string {
@@ -68,19 +60,19 @@ func (b *ViewableBoard) View() string {
                         classes := "cell"
                         if c.IsClaimed {
                                 if c.IsWon {
-                                        if c.Player == b.Player {
+                                        if c.Player == b.Viewer.PlayerOrder {
                                                 classes += " win"
                                         } else {
                                                 classes += " loss"
                                         }
-                                } else if c.Player == b.Player {
+                                } else if c.Player == b.Viewer.PlayerOrder {
                                         classes += " mine"
                                 } else {
                                         classes += " yours"
                                 }
                                 return "<div class=\"" + classes + "\">" + strconv.Itoa(c.Player+1) + "</div>"
                         } else {
-                                return "<a href=\"/move/" + b.PlayerId + "?point=" + point.String() +
+                                return "<a href=\"/move/" + b.Viewer.PlayerId + "?point=" + point.String() +
                                        "\"><div class=\"" + classes + "\"></div></a>"
                         }
                 } else if depth % 2 == 0 {

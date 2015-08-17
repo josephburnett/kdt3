@@ -103,7 +103,7 @@ const getGameTemplateHTML = `
   {{template "style"}}
   </head>
   <body>
-    <h3>{{.PlayerHandle}}{{ if .MyTurn }} (your turn){{end}}</h3>
+    <h3>{{.Viewer.Handle}}{{ if .IsMyTurn }} (your turn){{end}}</h3>
     {{if .Won}}<p>Game over!</p>{{else}}<p>{{.Message}}</p>{{end}}
     <div>{{.View}}</div>
     <div>{{.PlayerList}}</div>

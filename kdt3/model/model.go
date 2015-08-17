@@ -2,12 +2,13 @@ package model
 
 import (
         "errors"
+        "net/http"
         "strconv"
         "strings"
 )
 
 type Player struct {
-        Player int
+        PlayerOrder int
         PlayerId string
         GameId string
         Handle string
@@ -15,13 +16,63 @@ type Player struct {
 
 type Game struct {
         GameId string
-        PlayerIds []string
         Players []*Player
-        Owner int
-        Turn int
+        TurnOrder int
+        TurnId string
         Won bool
         Board *Board
         Rules *Rules
+}
+
+func NewGame(r *http.Request) (*Game, error) {
+        playerCount, err := strconv.Atoi(r.FormValue("playerCount"))
+        if err != nil {
+                return nil, err
+        }
+        if playerCount < 2 || playerCount > 10 {
+                return nil, errors.New("Player Count must be between 2 and 10.")
+        }
+        K, err := strconv.Atoi(r.FormValue("k"))
+        if err != nil {
+                return nil, err
+        }
+        if K < 2 || K > 5 {
+                return nil, errors.New("K must be between 2 and 5")
+        }
+        size, err := strconv.Atoi(r.FormValue("size"))
+        if err != nil {
+                return nil, err
+        }
+        if size < 2 || size > 5 {
+                return nil, errors.New("Size must be between 2 and 5")
+        }
+        inARow, err := strconv.Atoi(r.FormValue("inarow"))
+        if err != nil {
+                return nil, err
+        }
+        if inARow < 2 || inARow > size {
+                return nil, errors.New("In a row must be between 2 and " + strconv.Itoa(size))
+        }
+        gameId := newId()
+        players := make([]*Player, playerCount)
+        for i, _ := range players {
+                players[i] = &Player{
+                        PlayerId: newId(),
+                        GameId: gameId,
+                        PlayerOrder: i,
+                        Handle: "Player " + strconv.Itoa(i+1),
+                }
+        }
+        game := &Game{
+                GameId: gameId,
+                Players: players,
+                TurnOrder: 0,
+                TurnId: players[0].PlayerId,
+                Won: false,
+                Board: NewBoard(K, size),
+                Rules: &Rules{InARow: inARow},
+        }
+        return game, nil
 }
 
 type Board struct {

@@ -16,7 +16,7 @@ type WinnableGame struct {
 
 func (g *WinnableGame) IsWin() bool {
         boardWin := &WinnableBoard{g.Board}
-        wins := boardWin.GetWins(g.Turn, g.Rules)
+        wins := boardWin.GetWins(g.TurnOrder, g.Rules)
         if len(wins) == 0 {
                 return false
         }

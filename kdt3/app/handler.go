@@ -76,8 +76,8 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         if internalError(w, err) {
                 return
         }
-        message := r.FormValue("message")
-        gameView := &view.ViewableGame{game, id, message}
+        gameView := view.NewViewableGame(game, id)
+        gameView.Message = r.FormValue("message")
         err = view.GetGameTemplate.Execute(w, gameView)
         if internalError(w, err) {
                 return
