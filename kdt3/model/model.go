@@ -134,6 +134,7 @@ func (g *Game) Save(c chan<- datastore.Property) error {
         c <- datastore.Property{
                 Name: "Players",
                 Value: string(players),
+                NoIndex: true,
         }
         board, err := json.Marshal(g.Board)
         if err != nil {
@@ -142,6 +143,7 @@ func (g *Game) Save(c chan<- datastore.Property) error {
         c <- datastore.Property{
                 Name: "Board",
                 Value: string(board),
+                NoIndex: true,
         }
         rules, err := json.Marshal(g.Rules)
         if err != nil {
@@ -150,6 +152,7 @@ func (g *Game) Save(c chan<- datastore.Property) error {
         c <- datastore.Property{
                 Name: "Rules",
                 Value: string(rules),
+                NoIndex: true,
         }
         return nil
 }
