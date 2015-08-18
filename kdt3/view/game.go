@@ -34,6 +34,7 @@ func (g *ViewableGame) View() template.HTML {
         boardView := &ViewableBoard{
                 Board: g.Board,
                 Viewer: g.Viewer,
+                IsMyTurn: g.IsMyTurn,
         }
         return template.HTML(boardView.View())
 }
@@ -54,6 +55,7 @@ func (g *ViewableGame) PlayerList() template.HTML {
 type ViewableBoard struct {
         *m.Board
         Viewer *m.Player
+        IsMyTurn bool
 }
 
 func (b *ViewableBoard) View() string {
@@ -76,7 +78,7 @@ func (b *ViewableBoard) View() string {
                                 }
                                 return "<div class=\"" + classes + "\">" + strconv.Itoa(c.Player+1) + "</div>"
                         } else {
-                                if b.Viewer == nil {
+                                if b.Viewer == nil  || !b.IsMyTurn {
                                         return "<div class=\"" + classes + "\"></div>"
                                 } else {
                                         return "<a href=\"/move/" + b.Viewer.GameId + "?player="+ b.Viewer.PlayerId +
