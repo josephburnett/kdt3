@@ -6,6 +6,7 @@ import (
         "appengine"
         "appengine/channel"
         "appengine/datastore"
+        "appengine/user"
 
         m "kdt3/model"
 )
@@ -51,6 +52,10 @@ func createGame(c appengine.Context, r *http.Request) (*m.Game, error) {
         game, err := m.NewGame(r)
         if err != nil {
                 return nil, err
+        }
+        u := user.Current(c)
+        if u != nil {
+                game.Creator = u.ID
         }
         err = datastore.RunInTransaction(c, func(c appengine.Context) error {
                 gameKey := datastore.NewKey(c, "Game", game.GameId, 0, nil)

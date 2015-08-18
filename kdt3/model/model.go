@@ -19,6 +19,7 @@ type Player struct {
 
 type Game struct {
         GameId string
+        Creator string
         Players []*Player
         PlayerCount int
         TurnOrder int
@@ -38,6 +39,13 @@ func (g *Game) Load(c <-chan datastore.Property) error {
                                 g.GameId = str
                         } else {
                                 return errors.New("GameId is not a string")
+                        }
+                case property.Name == "Creator":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                g.Creator = str
+                        } else {
+                                return errors.New("Creator is not a string")
                         }
                 case property.Name == "PlayerCount":
                         i, ok := property.Value.(int64)
@@ -110,6 +118,10 @@ func (g *Game) Save(c chan<- datastore.Property) error {
         c <- datastore.Property{
                 Name: "GameId",
                 Value: g.GameId,
+        }
+        c <- datastore.Property{
+                Name: "Creator",
+                Value: g.Creator,
         }
         c <- datastore.Property{
                 Name: "PlayerCount",
