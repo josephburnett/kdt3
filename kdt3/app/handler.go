@@ -4,6 +4,7 @@ import (
         "net/http"
 
         "appengine"
+        "appengine/channel"
         "appengine/user"
 
         "kdt3/engine"
@@ -79,6 +80,11 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         }
         gameView := view.NewViewableGame(game, viewer)
         gameView.Message = r.FormValue("message")
+        tok, err := channel.Create(c, playerId)
+        if internalError(w, err) {
+                return
+        }
+        gameView.Token = tok
         err = view.GetGameTemplate.Execute(w, gameView)
         if internalError(w, err) {
                 return
@@ -122,6 +128,7 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         if internalError(w, err) {
                 return
         }
+        updateClients(c, game)
         http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message=Move accepted.", http.StatusFound)
 }
 

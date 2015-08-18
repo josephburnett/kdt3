@@ -4,10 +4,17 @@ import (
         "net/http"
 
         "appengine"
+        "appengine/channel"
         "appengine/datastore"
 
         m "kdt3/model"
 )
+
+func updateClients(c appengine.Context, game *m.Game) {
+        for _, player := range game.Players {
+                channel.SendJSON(c, player.PlayerId, "true")
+        }
+}
 
 func loadGame(c appengine.Context, gameId, playerId string) (*m.Game, *m.Player, error) {
         gameKey := datastore.NewKey(c, "Game", gameId, 0, nil)

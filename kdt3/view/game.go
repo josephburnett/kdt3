@@ -13,6 +13,7 @@ type ViewableGame struct {
         HasViewer bool
         IsMyTurn bool
         Message string
+        Token string
 }
 
 func NewViewableGame(game *m.Game, viewer *m.Player) *ViewableGame {
