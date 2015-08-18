@@ -41,7 +41,7 @@ const rootTemplateHTML = `
   </head>
   <body>
     <h3>K-D Tic Tac Toe</h3>
-    <p>Welcome {{.}}. Choose a game style below:</p>
+    <p>Choose a game style below:</p>
     <ul>
       <li><a href="/game?handle=Player 1;playerCount=2;k=2;size=3;inarow=3">Classic (2D-2P)</a></li>
       <li><a href="/game?handle=Player 1;playerCount=2;k=3;size=4;inarow=4">Deep Thinker (3D-2P)</a></li>
