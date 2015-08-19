@@ -2,6 +2,7 @@ package kdt3
 
 import (
         "net/http"
+        "time"
 
         "appengine"
         "appengine/channel"
@@ -40,7 +41,12 @@ func loadGame(c appengine.Context, gameId, playerId string) (*m.Game, *m.Player,
 }
 
 func saveGame(c appengine.Context, game *m.Game) error {
-        err := datastore.RunInTransaction(c, func(c appengine.Context) error {
+        now, err := time.Now().MarshalText()
+        if err != nil {
+                return err
+        }
+        game.UpdatedDate = string(now)
+        err = datastore.RunInTransaction(c, func(c appengine.Context) error {
                 gameKey := datastore.NewKey(c, "Game", game.GameId, 0, nil)
                 _, err := datastore.Put(c, gameKey, game)
                 return err

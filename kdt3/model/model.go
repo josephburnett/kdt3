@@ -6,6 +6,7 @@ import (
         "net/http"
         "strconv"
         "strings"
+        "time"
 
         "appengine/datastore"
 )
@@ -20,6 +21,8 @@ type Player struct {
 type Game struct {
         GameId string
         Creator string
+        CreatedDate string
+        UpdatedDate string
         Players []*Player
         PlayerCount int
         TurnOrder int
@@ -46,6 +49,20 @@ func (g *Game) Load(c <-chan datastore.Property) error {
                                 g.Creator = str
                         } else {
                                 return errors.New("Creator is not a string")
+                        }
+                case property.Name == "CreatedDate":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                g.CreatedDate = str
+                        } else {
+                                return errors.New("CreatedDate is not a string")
+                        }
+                case property.Name == "UpdatedDate":
+                        str, ok := property.Value.(string)
+                        if ok {
+                                g.UpdatedDate = str
+                        } else {
+                                return errors.New("UpdatedDate is not a string")
                         }
                 case property.Name == "PlayerCount":
                         i, ok := property.Value.(int64)
@@ -122,6 +139,14 @@ func (g *Game) Save(c chan<- datastore.Property) error {
         c <- datastore.Property{
                 Name: "Creator",
                 Value: g.Creator,
+        }
+        c <- datastore.Property{
+                Name: "CreatedDate",
+                Value: g.CreatedDate,
+        }
+        c <- datastore.Property{
+                Name: "UpdatedDate",
+                Value: g.UpdatedDate,
         }
         c <- datastore.Property{
                 Name: "PlayerCount",
@@ -208,8 +233,14 @@ func NewGame(r *http.Request) (*Game, error) {
                         Handle: "Player " + strconv.Itoa(i+1),
                 }
         }
+        now, err := time.Now().MarshalText()
+        if err != nil {
+                return nil, err
+        }
         game := &Game{
                 GameId: gameId,
+                CreatedDate: string(now),
+                UpdatedDate: string(now),
                 Players: players,
                 PlayerCount: len(players),
                 TurnOrder: 0,
