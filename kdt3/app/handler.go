@@ -4,7 +4,6 @@ import (
         "net/http"
 
         "appengine"
-        "appengine/channel"
         "appengine/user"
 
         "kdt3/engine"
@@ -80,11 +79,11 @@ func getGame(w http.ResponseWriter, r *http.Request) {
         }
         gameView := view.NewViewableGame(game, viewer)
         gameView.Message = r.FormValue("message")
-        tok, err := channel.Create(c, playerId)
-        if internalError(w, err) {
-                return
+        tok, err := getToken(c, playerId)
+        if err == nil {
+                gameView.Token = tok
+                gameView.HasToken = true
         }
-        gameView.Token = tok
         err = view.GetGameTemplate.Execute(w, gameView)
         if internalError(w, err) {
                 return

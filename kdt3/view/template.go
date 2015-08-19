@@ -103,12 +103,14 @@ const getGameTemplateHTML = `
   {{template "style"}}
   </head>
   <body>
+  {{if .HasToken}}
     <script type="text/javascript" src="/_ah/channel/jsapi"></script>
     <script>
       channel = new goog.appengine.Channel('{{.Token}}');
       socket = channel.open();
       socket.onmessage = function() { location.reload(); };
     </script>
+  {{end}}
     {{if .HasViewer}}<h3>{{.Viewer.Handle}}{{ if .IsMyTurn }} (your turn){{end}}</h3>
     {{else}}<h3>{{.GameId}}</h3>{{end}}
     {{if .Won}}<p>Game over!</p>{{else}}<p>{{.Message}}</p>{{end}}

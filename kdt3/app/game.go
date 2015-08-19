@@ -7,10 +7,29 @@ import (
         "appengine"
         "appengine/channel"
         "appengine/datastore"
+        "appengine/memcache"
         "appengine/user"
 
         m "kdt3/model"
 )
+
+func getToken(c appengine.Context, playerId string) (string, error) {
+        item, err := memcache.Get(c, "token::"+playerId)
+        if err != nil {
+                tok, err := channel.Create(c, playerId)
+                if err != nil {
+                        return "", err
+                }
+                memcache.Set(c, &memcache.Item{
+                        Key: "token::"+playerId,
+                        Value: []byte(tok),
+                        Expiration: 2 * time.Hour,
+                })
+                return tok, nil
+        }
+        tok := string(item.Value)
+        return tok, nil
+}
 
 func updateClients(c appengine.Context, game *m.Game) {
         for _, player := range game.Players {

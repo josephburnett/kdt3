@@ -14,6 +14,7 @@ type ViewableGame struct {
         IsMyTurn bool
         Message string
         Token string
+        HasToken bool
 }
 
 func NewViewableGame(game *m.Game, viewer *m.Player) *ViewableGame {
