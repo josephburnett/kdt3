@@ -33,7 +33,7 @@ func TestWinnableBoardK1(t *testing.T) {
                 m.Segment{m.Point{0, 0}, m.Point{1, 1},},
                 m.Segment{m.Point{1, 1}, m.Point{0, 0},},
         }
-        actual := WinnableBoard{board}.GetWins(1, rules)
+        actual := (&WinnableBoard{board}).GetWins(1, rules)
         if !reflect.DeepEqual(expect, actual) {
                 t.Errorf("Expected %v but got %v\n", expect, actual)
         }

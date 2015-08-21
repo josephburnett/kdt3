@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+# Verify no pending changes
+if [ "0" != "$(git status --porcelain | wc -l)" ]
+then
+        echo "There are pending changes to commit.  Cannot release."
+        exit 1
+fi
+
+# Verify code has been pushed
+if [ "0" != "$(git diff origin/master | wc -l)" ]
+then
+        echo "All changes are not pushed to origin/master.  Cannot release."
+        exit 1
+fi
+
+# Unit tests
+goapp test kdt3/*
+
+# Tag this release
+NOW=$(date --iso-8601=seconds | tr ':' '.')
+TAG=release_$NOW
+git tag $TAG
+
+# Deploy
+goapp deploy
+
+# Report success
+echo "$(tput setaf 2)SUCCESS$(tput sgr 0)"
