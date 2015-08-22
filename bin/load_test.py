@@ -46,31 +46,43 @@ ENDPOINT = "http://localhost:8080"
 
 quitevent = Event()
 
-def staticGame(h):
-    """Play a predetermined game of K-D Tic Tac Toe."""
-    resp, cont = h.request(ENDPOINT)
-    if resp.status != 200:
-        print "Response not OK"
-    if not resp['content-location'].startswith(ENDPOINT):
-        print "Unexpected content-location"
-    resp, _ = h.request(ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3")
-    if resp.status != 200:
-        print "Response not OK"
-    if not resp['content-location'].startswith(ENDPOINT+"/game"):
-        print "Unexpected content-location"
-    # ... play the rest of the game
+def assertRequest(h, expected):
+    """Make a request and assert the expected response."""
+    resp, cont = h.request(expected['url'])
+    if resp.status != expected['status']:
+        print "Unexpected status: " + resp.status
+        return False
+    if not resp['content-location'].startswith(expected['loc']):
+        print "Unexpected content-location: " + resp['content-location']
+        return False
+    return True
+
+def runGame(h, requestList):
+    """Make all listed requests and assert they all succeed."""
+    for r in requestList:
+        if not assertRequest(h, r): return False
+    return True
 
 def threadproc():
     """This function is executed by each thread."""
     print "Thread started: %s" % current_thread().getName()
+    succeeded = 0
+    attempted = 0
     h = httplib2.Http(timeout=30)
     while not quitevent.is_set():
         try:
-            staticGame(h)
+            attempted += 1
+            success = runGame(h, [
+                {'url': ENDPOINT, 'status': 200, 'loc': ENDPOINT},
+                {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game"}
+                # Play the rest of a game ...
+            ])
+            if success:
+                succeeded += 1
         except socket.timeout:
             pass
 
-    print "Thread finished: %s" % current_thread().getName()
+    print "Thread finished: %s (%s/%s)" % (current_thread().getName(), succeeded, attempted)
 
 
 if __name__ == "__main__":
