@@ -35,7 +35,7 @@ from urllib import urlencode
 NUM_THREADS = 1
 
 # How many minutes the test should run with all threads active.
-TIME_AT_PEAK_QPS = 0.1 # minutes
+TIME_AT_PEAK_QPS = 1 # minutes
 
 # How many seconds to wait between starting threads.
 # Shouldn't be set below 30 seconds.
@@ -51,13 +51,14 @@ def staticGame(h):
     resp, cont = h.request(ENDPOINT)
     if resp.status != 200:
         print "Response not OK"
-    if resp['content-location'].startswith(ENDPOINT):
+    if not resp['content-location'].startswith(ENDPOINT):
         print "Unexpected content-location"
     resp, _ = h.request(ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3")
     if resp.status != 200:
         print "Response not OK"
-    if resp['content-location'].startswith(ENDPOINT+"/game"):
+    if not resp['content-location'].startswith(ENDPOINT+"/game"):
         print "Unexpected content-location"
+    # ... play the rest of the game
 
 def threadproc():
     """This function is executed by each thread."""

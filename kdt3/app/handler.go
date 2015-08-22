@@ -4,7 +4,6 @@ import (
         "net/http"
 
         "appengine"
-        "appengine/user"
 
         "kdt3/engine"
         m "kdt3/model"
@@ -20,25 +19,13 @@ func init() {
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-        c := appengine.NewContext(r)
-        u := user.Current(c)
-        if u == nil {
-                redirectLogin(c, w, r)
-                return
-        }
-        err := view.RootTemplate.Execute(w, u)
+        err := view.RootTemplate.Execute(w, nil)
         if internalError(w, err) {
                 return
         }
 }
 
 func getNew(w http.ResponseWriter, r *http.Request) {
-        c := appengine.NewContext(r)
-        u := user.Current(c)
-        if u == nil {
-                redirectLogin(c, w, r)
-                return
-        }
         message := r.FormValue("message")
         err := view.NewGameTemplate.Execute(w, message)
         if internalError(w, err) {
@@ -48,11 +35,6 @@ func getNew(w http.ResponseWriter, r *http.Request) {
 
 func postGame(w http.ResponseWriter, r *http.Request) {
         c := appengine.NewContext(r)
-        u := user.Current(c)
-        if u == nil {
-                redirectLogin(c, w, r)
-                return
-        }
         game, err := createGame(c, r)
         if err != nil {
                 http.Redirect(w, r, "/new?message="+err.Error(), http.StatusFound)
@@ -66,11 +48,6 @@ func postGame(w http.ResponseWriter, r *http.Request) {
 
 func getGame(w http.ResponseWriter, r *http.Request) {
         c := appengine.NewContext(r)
-        u := user.Current(c)
-        if u == nil {
-                redirectLogin(c, w, r)
-                return
-        }
         gameId := r.URL.Path[len("/game/"):]
         playerId := r.FormValue("player")
         game, viewer, err := loadGame(c, gameId, playerId)
@@ -92,11 +69,6 @@ func getGame(w http.ResponseWriter, r *http.Request) {
 
 func postMove(w http.ResponseWriter, r *http.Request) {
         c := appengine.NewContext(r)
-        u := user.Current(c)
-        if u == nil {
-                redirectLogin(c, w, r)
-                return
-        }
         gameId := r.URL.Path[len("/move/"):]
         playerId := r.FormValue("player")
         game, viewer, err := loadGame(c, gameId, playerId)
@@ -129,15 +101,6 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         }
         updateClients(c, game)
         http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message=Move accepted.", http.StatusFound)
-}
-
-func redirectLogin(c appengine.Context, w http.ResponseWriter, r *http.Request) {
-        url, err := user.LoginURL(c, r.URL.String())
-        if internalError(w, err) {
-                return
-        }
-        w.Header().Set("location", url)
-        w.WriteHeader(http.StatusFound)
 }
 
 func internalError(w http.ResponseWriter, err error) bool {
