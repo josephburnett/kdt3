@@ -23,6 +23,7 @@ to make the requests you want load tested.
 import httplib2
 import random
 import socket
+import sys
 import time
 from threading import Event
 from threading import Thread
@@ -47,6 +48,47 @@ DELAY_BETWEEN_THREAD_START = 30 # seconds
 ENDPOINT = "http://localhost:8080"
 
 quitevent = Event()
+
+def runStaticGame(h):
+    """Play a predetermined 2D-2P 3x3 game."""
+    return runGame(h, [
+        {'url': ENDPOINT, 'status': 200, 'loc': ENDPOINT},
+        {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game",
+         'parameterize': lambda resp, cont:
+            {
+                'gameId': gameIds(cont)[0],
+                'player1': gameIds(cont)[1][0],
+                'player2': gameIds(cont)[1][1]
+            }
+        },
+        {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: "(your turn)" in cont ]},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: "Move accepted." in cont ]},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=1,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=1,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: not "(your turn)" in cont ]},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: "Invalid move: out of turn." in cont ]},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: "(your turn)" in cont ]},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: "Game over!" in cont,
+                         lambda _, cont: "(your turn)" in cont ]},
+        {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+         'assertions': [ lambda _, cont: "Game over!" in cont,
+                         lambda _, cont: not "(your turn)" in cont ]},
+    ])
+
 
 def assertRequest(h, r, ctx):
     """Make a request and assert the expected response."""
@@ -99,53 +141,14 @@ def threadproc():
     while not quitevent.is_set():
         try:
             attempted += 1
-            gameId, playerIds = "", []
-            success = runGame(h, [
-                {'url': ENDPOINT, 'status': 200, 'loc': ENDPOINT},
-                {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game",
-                 'parameterize': lambda resp, cont:
-                    {
-                        'gameId': gameIds(cont)[0],
-                        'player1': gameIds(cont)[1][0],
-                        'player2': gameIds(cont)[1][1]
-                    }
-                },
-                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: "(your turn)" in cont ]},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: "Move accepted." in cont ]},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=1,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=1,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: not "(your turn)" in cont ]},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: "Invalid move: out of turn." in cont ]},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: "(your turn)" in cont ]},
-                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: "Game over!" in cont,
-                                 lambda _, cont: "(your turn)" in cont ]},
-                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
-                 'assertions': [ lambda _, cont: "Game over!" in cont,
-                                 lambda _, cont: not "(your turn)" in cont ]},
-            ])
-            if success:
+            if runStaticGame(h):
                 succeeded += 1
         except socket.timeout:
             pass
 
     print "Thread finished: %s (%s/%s)" % (current_thread().getName(), succeeded, attempted)
 
-
-if __name__ == "__main__":
+def loadTest():
     runtime = (TIME_AT_PEAK_QPS * 60 + DELAY_BETWEEN_THREAD_START * NUM_THREADS)
     print "Total runtime will be: %d seconds" % runtime
     threads = []
@@ -166,3 +169,24 @@ if __name__ == "__main__":
     for t in threads:
         t.join(1.0)
     print "Finished"
+
+def releaseTest():
+    print "Running release tests"
+    h = httplib2.Http(timeout=30)
+    if runStaticGame(h):
+        print "Static game passed"
+    else:
+        print "Static game failed"
+        exit(1)
+    print "Finished"
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        if sys.argv[1] == "load":
+            loadTest()
+            exit(0)
+        if sys.argv[1] == "release":
+            releaseTest()
+            exit(0)
+    print "Usage: python "+sys.argv[0]+" load|release"
+    exit(1)
