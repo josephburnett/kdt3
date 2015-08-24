@@ -2,6 +2,7 @@ package kdt3
 
 import (
         "net/http"
+        "net/url"
 
         "appengine"
 
@@ -37,7 +38,7 @@ func postGame(w http.ResponseWriter, r *http.Request) {
         c := appengine.NewContext(r)
         game, err := createGame(c, r)
         if err != nil {
-                http.Redirect(w, r, "/new?message="+err.Error(), http.StatusFound)
+                http.Redirect(w, r, "/new?message="+url.QueryEscape(err.Error()), http.StatusFound)
                 return
         }
         err = view.PostGameTemplate.Execute(w, game)
@@ -86,7 +87,7 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         gameMove := &engine.MovableGame{game}
         err = gameMove.Move(viewer.PlayerId, point)
         if err != nil {
-                http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message="+err.Error(), http.StatusFound)
+                http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message="+url.QueryEscape(err.Error()), http.StatusFound)
                 return
         }
         gameWin := &engine.WinnableGame{game}
@@ -100,7 +101,7 @@ func postMove(w http.ResponseWriter, r *http.Request) {
                 return
         }
         updateClients(c, game)
-        http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message=Move accepted.", http.StatusFound)
+        http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message="+url.QueryEscape("Move accepted."), http.StatusFound)
 }
 
 func internalError(w http.ResponseWriter, err error) bool {

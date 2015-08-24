@@ -28,6 +28,8 @@ from threading import Event
 from threading import Thread
 from threading import current_thread
 from urllib import urlencode
+from lxml import html
+from string import Template
 
 # Modify these values to control how the testing is done
 
@@ -46,22 +48,47 @@ ENDPOINT = "http://localhost:8080"
 
 quitevent = Event()
 
-def assertRequest(h, expected):
+def assertRequest(h, r, ctx):
     """Make a request and assert the expected response."""
-    resp, cont = h.request(expected['url'])
-    if resp.status != expected['status']:
-        print "Unexpected status: " + resp.status
-        return False
-    if not resp['content-location'].startswith(expected['loc']):
+    url = Template(r['url']).substitute(ctx)
+    loc = Template(r['loc']).substitute(ctx)
+    resp, cont = h.request(url)
+    if resp.status != r['status']:
+        print "Unexpected status: " + str(resp.status)
+        return False, "", ""
+    if not resp['content-location'].startswith(loc):
         print "Unexpected content-location: " + resp['content-location']
-        return False
-    return True
+        return False, "", ""
+    if r.has_key('assertions'):
+        for a in r['assertions']:
+            if not a(resp, cont):
+                print "Assertion failed." # TODO: say which one
+                return False, "", ""
+    return True, resp, cont
 
 def runGame(h, requestList):
     """Make all listed requests and assert they all succeed."""
+    ctx = {}
     for r in requestList:
-        if not assertRequest(h, r): return False
+        success, resp, cont = assertRequest(h, r, ctx)
+        if not success: return False
+        if r.has_key('parameterize'):
+            ctx.update(r['parameterize'](resp, cont))
     return True
+
+def gameIds(cont):
+    """Read game and player ids from game creation HTML."""
+    root = html.fromstring(cont)
+    links = root.xpath('//a/@href')
+    if len(links) < 2:
+        raise Exception("Expected at least 2 links")
+    # /game/YZWGN2VSA733XGVXDAVSTCCMLM?player=SCZVA2IHJNXIJBWSL22MGUOCJQ;...
+    #       ^                        ^        ^                        ^
+    gameId = links[0][5:31]
+    playerIds = []
+    for link in links:
+        playerIds.append(link[39:65])
+    return gameId, playerIds
 
 def threadproc():
     """This function is executed by each thread."""
@@ -72,10 +99,43 @@ def threadproc():
     while not quitevent.is_set():
         try:
             attempted += 1
+            gameId, playerIds = "", []
             success = runGame(h, [
                 {'url': ENDPOINT, 'status': 200, 'loc': ENDPOINT},
-                {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game"}
-                # Play the rest of a game ...
+                {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game",
+                 'parameterize': lambda resp, cont:
+                    {
+                        'gameId': gameIds(cont)[0],
+                        'player1': gameIds(cont)[1][0],
+                        'player2': gameIds(cont)[1][1]
+                    }
+                },
+                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: "(your turn)" in cont ]},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: "Move accepted." in cont ]},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=1,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=1,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: not "(your turn)" in cont ]},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: "Invalid move: out of turn." in cont ]},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: "(your turn)" in cont ]},
+                {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: "Game over!" in cont,
+                                 lambda _, cont: "(your turn)" in cont ]},
+                {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+                 'assertions': [ lambda _, cont: "Game over!" in cont,
+                                 lambda _, cont: not "(your turn)" in cont ]},
             ])
             if success:
                 succeeded += 1
