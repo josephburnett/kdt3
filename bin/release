@@ -19,6 +19,13 @@ fi
 # Unit tests
 goapp test kdt3/*
 
+# Scenario tests
+# (appengine dev_appserver needs SIGINT to shutdown gracefully)
+trap 'kill -2 $(jobs -p) && sleep 2' EXIT
+goapp serve -clear_datastore app-test.yaml &
+sleep 2
+python bin/test.py release
+
 # Tag this release
 NOW=$(date --iso-8601=seconds | tr ':' '.')
 TAG=release_$NOW
