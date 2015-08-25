@@ -38,14 +38,14 @@ from string import Template
 NUM_THREADS = 1
 
 # How many minutes the test should run with all threads active.
-TIME_AT_PEAK_QPS = 1 # minutes
+TIME_AT_PEAK_QPS = 10 # minutes
 
 # How many seconds to wait between starting threads.
 # Shouldn't be set below 30 seconds.
 DELAY_BETWEEN_THREAD_START = 30 # seconds
 
 # Which endpoint should we hit?
-ENDPOINT = "http://localhost:8080"
+ENDPOINT = "http://kdtictactoe-1048.appspot.com"
 
 quitevent = Event()
 
