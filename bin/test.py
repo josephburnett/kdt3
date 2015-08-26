@@ -35,7 +35,7 @@ from string import Template
 # Modify these values to control how the testing is done
 
 # How many threads should be running at peak load.
-NUM_THREADS = 10
+NUM_THREADS = 5
 
 # How many minutes the test should run with all threads active.
 TIME_AT_PEAK_QPS = 10 # minutes
@@ -53,7 +53,7 @@ def runStaticGame(h):
     """Play a predetermined 2D-2P 3x3 game."""
     return runGame(h, [
         {'url': ENDPOINT, 'status': 200, 'loc': ENDPOINT},
-        {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=2;size=3;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game",
+        {'url': ENDPOINT+"/game?handle=Player%201;playerCount=2;k=5;size=5;inarow=3", 'status': 200, 'loc': ENDPOINT+"/game",
          'parameterize': lambda resp, cont:
             {
                 'gameId': gameIds(cont)[0],
@@ -63,25 +63,25 @@ def runStaticGame(h):
         },
         {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
          'assertions': [ lambda _, cont: "(your turn)" in cont ]},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0,0,0,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
          'assertions': [ lambda _, cont: "Move accepted." in cont ]},
         {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=1,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=0,0,0,1,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
         {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=1,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0,0,1,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
         {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=0,0,0,2,0", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
         {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0,0,0,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
         {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=0,0,0,2,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}"},
         {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
          'assertions': [ lambda _, cont: not "(your turn)" in cont ]},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=2,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+        {'url': ENDPOINT+"/move/${gameId}?player=${player2};point=0,0,0,2,2", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
          'assertions': [ lambda _, cont: "Invalid move: out of turn." in cont ]},
         {'url': ENDPOINT+"/game/${gameId}?player=${player1}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
          'assertions': [ lambda _, cont: "(your turn)" in cont ]},
-        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
+        {'url': ENDPOINT+"/move/${gameId}?player=${player1};point=0,0,0,0,1", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
          'assertions': [ lambda _, cont: "Game over!" in cont,
                          lambda _, cont: "(your turn)" in cont ]},
         {'url': ENDPOINT+"/game/${gameId}?player=${player2}", 'status': 200, 'loc': ENDPOINT+"/game/${gameId}",
@@ -97,9 +97,11 @@ def assertRequest(h, r, ctx):
     resp, cont = h.request(url)
     if resp.status != r['status']:
         print "Unexpected status: " + str(resp.status)
+        print "url: " + url
         return False, "", ""
     if not resp['content-location'].startswith(loc):
         print "Unexpected content-location: " + resp['content-location']
+        print "url: " + url
         return False, "", ""
     if r.has_key('assertions'):
         for a in r['assertions']:
@@ -173,8 +175,11 @@ def loadTest():
 def releaseTest():
     print "Running release tests"
     h = httplib2.Http(timeout=30)
+    start = time.time()
     if runStaticGame(h):
+        end = time.time()
         print "Static game passed"
+        print "Time: "+ str(end-start)
     else:
         print "Static game failed"
         exit(1)
