@@ -59,7 +59,7 @@ func loadGame(c appengine.Context, gameId, playerId string) (*m.Game, *m.Player,
         return game, player, nil
 }
 
-func saveGame(c appengine.Context, game *m.Game) error {
+func saveGame(c appengine.Context, game *m.Game, player *m.Player) error {
         now, err := time.Now().MarshalText()
         if err != nil {
                 return err
@@ -68,7 +68,17 @@ func saveGame(c appengine.Context, game *m.Game) error {
         err = datastore.RunInTransaction(c, func(c appengine.Context) error {
                 gameKey := datastore.NewKey(c, "Game", game.GameId, 0, nil)
                 _, err := datastore.Put(c, gameKey, game)
-                return err
+		if err != nil {
+			return err
+		}
+		if player != nil {
+			playerKey := datastore.NewKey(c, "Player", player.PlayerId, 0, gameKey)
+			_, err := datastore.Put(c, playerKey, player)
+			if err != nil {
+				return err
+			}
+		}
+                return nil
         }, nil)
         return err
 }

@@ -43,11 +43,11 @@ func (g *ViewableGame) View() template.HTML {
 func (g *ViewableGame) PlayerList() template.HTML {
         players := "<ol>"
         for i, p := range g.Players {
-                if i == g.TurnOrder {
-                        players += "<li><b>" + p.Handle + "</b></li>"
-                } else {
-                        players += "<li>" + p.Handle + "</li>"
-                }
+		tags := ""
+		if g.HasViewer && i == g.TurnOrder {
+			tags += " (turn)"
+		}
+                players += "<li>" + p.Handle + tags + "</li>"
         }
         players += "</ol>"
         return template.HTML(players)

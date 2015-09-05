@@ -17,6 +17,8 @@ func init() {
         http.HandleFunc("/game", postGame)
         http.HandleFunc("/game/", getGame)
         http.HandleFunc("/move/", postMove)
+	http.HandleFunc("/settings/", getSettings)
+	http.HandleFunc("/player/", postPlayer)
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -96,12 +98,49 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         } else {
                 gameMove.AdvanceTurn()
         }
-        err = saveGame(c, gameMove.Game)
+        err = saveGame(c, gameMove.Game, nil)
         if internalError(w, err) {
                 return
         }
         updateClients(c, game)
         http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message="+url.QueryEscape("Move accepted."), http.StatusFound)
+}
+
+func getSettings(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	gameId := r.URL.Path[len("/settings/"):]
+	playerId := r.FormValue("player")
+	_, player, err := loadGame(c, gameId, playerId)
+	if internalError(w, err) {
+		return
+	}
+	err = view.GetSettingsTemplate.Execute(w, player)
+        if internalError(w, err) {
+                return
+        }
+}
+
+func postPlayer(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	gameId := r.URL.Path[len("/player/"):]
+	playerId := r.FormValue("player")
+	handle := r.FormValue("handle")
+	if len(handle) > 20 {
+			http.Redirect(w, r, "/game/"+gameId+"?player="+playerId+";message="+url.QueryEscape("Handle cannot be longer than 20 characters."), http.StatusFound)
+		return
+	}
+	game, player, err := loadGame(c, gameId, playerId)
+	if internalError(w, err) {
+		return
+	}
+	gamePlayer := game.Players[player.PlayerOrder]
+	gamePlayer.Handle = handle
+	player.Handle = handle
+	err = saveGame(c, game, player)
+	if internalError(w, err) {
+		return
+	}
+	http.Redirect(w, r, "/game/"+gameId+"?player="+playerId+";message="+url.QueryEscape("Handle successfully changed."), http.StatusFound)
 }
 
 func internalError(w http.ResponseWriter, err error) bool {

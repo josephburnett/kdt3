@@ -28,6 +28,9 @@ const style = `
   .yours {
     background: #E6E3E3;
   }
+  #settings, #players {
+    font-size: 0.8em;
+  }
 </style>
 {{end}}
 `
@@ -115,7 +118,34 @@ const getGameTemplateHTML = `
     {{else}}<h3>{{.GameId}}</h3>{{end}}
     {{if .Won}}<p>Game over!</p>{{else}}<p>{{.Message}}</p>{{end}}
     <div>{{.View}}</div>
-    <div>{{.PlayerList}}</div>
+    <div id="players">
+      <h4>Players:</h4>
+      {{.PlayerList}}
+    </div>
+    {{if .HasViewer}}
+      <div id="settings">
+        <h4>Settings:</h4>
+        <ul><li><a href="/settings/{{.GameId}}?player={{.Viewer.PlayerId}}">Change my handle</a></li></ul>
+      </div>
+    {{end}}
+  </body>
+</html>
+{{end}}
+`
+
+var GetSettingsTemplate = html.Must(html.New("getsettings").Parse(style+getSettingsTemplateHTML))
+const getSettingsTemplateHTML = `
+{{define "getsettings"}}
+<html>
+  <head>
+  {{template "style"}}
+  </head>
+  <body>
+    <h3>Player Settings</h3>
+    <form action="/player/{{.GameId}}?player={{.PlayerId}}" method="post">
+      <div>Handle: <input type="text" name="handle" value="{{.Handle}}"></div>
+      <div><input type="submit" value="Change"></div>
+    </form>
   </body>
 </html>
 {{end}}
