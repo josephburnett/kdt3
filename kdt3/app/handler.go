@@ -86,13 +86,13 @@ func postMove(w http.ResponseWriter, r *http.Request) {
         if internalError(w, err) {
                 return
         }
-        gameMove := &engine.MovableGame{game}
+        gameMove := &engine.MovableGame{Game: game}
         err = gameMove.Move(viewer.PlayerId, point)
         if err != nil {
                 http.Redirect(w, r, "/game/"+gameId+"?player="+viewer.PlayerId+";message="+url.QueryEscape(err.Error()), http.StatusFound)
                 return
         }
-        gameWin := &engine.WinnableGame{game}
+        gameWin := &engine.WinnableGame{Game: game}
         if gameWin.IsWin() {
                 game.Won = true
         } else {
