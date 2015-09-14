@@ -23,7 +23,7 @@ goapp test kdt3/*
 # (appengine dev_appserver needs SIGINT to shutdown gracefully)
 trap 'kill -2 $(jobs -p) && sleep 2' EXIT
 goapp serve -clear_datastore app.yaml &
-sleep 2
+sleep 4
 python bin/test.py release
 
 # Tag this release
