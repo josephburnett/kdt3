@@ -17,8 +17,8 @@ func init() {
         http.HandleFunc("/game", postGame)
         http.HandleFunc("/game/", getGame)
         http.HandleFunc("/move/", postMove)
-	http.HandleFunc("/settings/", getSettings)
-	http.HandleFunc("/player/", postPlayer)
+        http.HandleFunc("/settings/", getSettings)
+        http.HandleFunc("/player/", postPlayer)
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
