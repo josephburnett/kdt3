@@ -178,3 +178,53 @@ func TestEvaluate(t *testing.T) {
                 t.Errorf("Unexpected evaluation for game 2 player 1: %v (expected %v)", game2Score1, math.MaxInt64)
         }
 }
+
+func setupBenchmark(K, D int) (board *m.Board, rules *m.Rules) {
+        board = m.NewBoard(K, D)
+        rules = &m.Rules{ InARow: D }
+        return
+}
+// BenchmarkEvaluateK2D3	   30000	     38052 ns/op
+func BenchmarkEvaluateK2D3(b *testing.B) {
+        board, rules := setupBenchmark(2,3)
+        b.ResetTimer()
+        for i := 0; i < b.N; i++ {
+                Evaluate(board, rules, 2, 0)
+        }
+}
+
+// BenchmarkEvaluateK3D4	    1000	   1158470 ns/op
+func BenchmarkEvaluateK3D4(b *testing.B) {
+        board, rules := setupBenchmark(3,4)
+        b.ResetTimer()
+        for i := 0; i < b.N; i++ {
+                Evaluate(board, rules, 2, 0)
+        }
+}
+
+// BenchmarkEvaluateK4D5	      30	  36219983 ns/op
+func BenchmarkEvaluateK4D5(b *testing.B) {
+        board, rules := setupBenchmark(4,5)
+        b.ResetTimer()
+        for i := 0; i < b.N; i++ {
+                Evaluate(board, rules, 2, 0)
+        }
+}
+
+// BenchmarkEvaluateK5D6	       1	1497060537 ns/op
+func BenchmarkEvaluateK5D6(b *testing.B) {
+        board, rules := setupBenchmark(5,6)
+        b.ResetTimer()
+        for i := 0; i < b.N; i++ {
+                Evaluate(board, rules, 2, 0)
+        }
+}
+
+// BenchmarkEvaluateK6D7	       1	79817763800 ns/op
+func BenchmarkEvaluateK6D7(b *testing.B) {
+        board, rules := setupBenchmark(6,7)
+        b.ResetTimer()
+        for i := 0; i < b.N; i++ {
+                Evaluate(board, rules, 2, 0)
+        }
+}
