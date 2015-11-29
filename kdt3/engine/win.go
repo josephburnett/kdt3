@@ -41,9 +41,9 @@ func (b *WinnableBoard) AnnotateWins(wins []model.Segment) {
 }
 
 func (b *WinnableBoard) GetWins(player int, rules *model.Rules) (wins []model.Segment) {
-        eachPoint(b.K, b.D, func(p model.Point) {
-                eachDirection(b.K, func(d model.Direction) {
-                        if isWinningVector(b.K, b.D, player, rules, p, d) {
+        EachPoint(b.K, b.D, func(p model.Point) {
+                EachDirection(b.K, func(d model.Direction) {
+                        if IsWinningVector(b.K, b.D, player, rules, p, d) {
                                 wins = append(wins, model.NewSegment(p, d, rules.InARow))
                         }
                 })
@@ -51,7 +51,7 @@ func (b *WinnableBoard) GetWins(player int, rules *model.Rules) (wins []model.Se
         return
 }
 
-func eachPoint(K int, root *model.Cell, fn func(model.Point)) {
+func EachPoint(K int, root *model.Cell, fn func(model.Point)) {
         point := make(model.Point, K)
         var recur func(*model.Cell, int)
         recur = func(c *model.Cell, depth int) {
@@ -67,7 +67,7 @@ func eachPoint(K int, root *model.Cell, fn func(model.Point)) {
         recur(root, K)
 }
 
-func eachDirection(K int, fn func (model.Direction)) {
+func EachDirection(K int, fn func (model.Direction)) {
         direction := make(model.Direction, K)
         var recur func(int, int)
         recur = func(depth, dir int) {
@@ -85,7 +85,7 @@ func eachDirection(K int, fn func (model.Direction)) {
         recur(K-1, Incline)
 }
 
-func isWinningVector(K int, root *model.Cell, player int, rules *model.Rules, point, direction []int) bool {
+func IsWinningVector(K int, root *model.Cell, player int, rules *model.Rules, point, direction []int) bool {
         entirelyNeutral := true
         for _, v := range direction {
                 if v != Neutral {

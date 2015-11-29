@@ -1,0 +1,1 @@
+- Tic Tac Toe evaluation function: http://pages.cs.wisc.edu/~dyer/cs540/notes/games.html
